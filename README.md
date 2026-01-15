@@ -12,6 +12,14 @@ These skills follow the [Agent Skills Open Standard](https://agentskills.io) and
 | **olakai-add-monitoring** | Add Olakai monitoring to an existing AI agent or LLM integration |
 | **olakai-troubleshoot** | Troubleshoot monitoring issues - missing events, KPI problems, SDK errors |
 
+## Bundled Agent
+
+The **olakai-expert** agent bundles all three skills together, providing a single specialist that can handle any Olakai integration task:
+
+| Agent | Description |
+|-------|-------------|
+| **olakai-expert** | Full Olakai integration specialist - creates agents, adds monitoring, troubleshoots issues |
+
 ## Installation
 
 ### Option 1: Claude Code Plugin Marketplace (Recommended)
@@ -46,7 +54,29 @@ git clone https://github.com/olakai/olakai-skills .claude/skills/olakai-skills
 
 Download the ZIP files from the [Releases](https://github.com/olakai/olakai-skills/releases) page and upload through **Settings > Capabilities > Skills**.
 
+### Installing the Bundled Agent
+
+The plugin marketplace installs individual skills. To use the bundled **olakai-expert** agent, clone the repo and copy the agents directory:
+
+```bash
+# Clone the repo
+git clone https://github.com/olakai/olakai-skills /tmp/olakai-skills
+
+# Copy agents to user-level (available in all projects)
+cp -r /tmp/olakai-skills/agents ~/.claude/agents/
+
+# Or copy to project-level (version controlled)
+cp -r /tmp/olakai-skills/agents .claude/agents/
+
+# Clean up
+rm -rf /tmp/olakai-skills
+```
+
+Alternatively, use the full git installation (Option 2 or 3) which includes both skills and agents.
+
 ## Usage
+
+### Individual Skills
 
 Once installed, simply ask Claude to help with Olakai-related tasks:
 
@@ -55,6 +85,16 @@ Once installed, simply ask Claude to help with Olakai-related tasks:
 - "My KPIs are showing string values instead of numbers"
 
 Claude will automatically invoke the relevant skill.
+
+### Bundled Agent
+
+If you installed the bundled agent, you can invoke it directly:
+
+```
+Use the olakai-expert agent to set up monitoring for my AI chatbot
+```
+
+The agent has all three skills loaded and will guide you through the complete workflow.
 
 ## The Golden Rule: Test → Fetch → Validate
 
