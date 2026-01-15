@@ -1,21 +1,28 @@
 {
   "name": "olakai-skills",
   "description": "Official skills for Olakai AI observability platform - monitor, analyze, and govern AI agents",
+  "owner": {
+    "name": "Olakai",
+    "email": "support@olakai.ai"
+  },
   "plugins": [
     {
       "name": "olakai-create-agent",
-      "path": "skills/olakai-create-agent",
-      "description": "Create a new AI agent with Olakai monitoring, KPIs, and governance"
+      "description": "Create a new AI agent with Olakai monitoring, KPIs, and governance",
+      "source": "./skills/olakai-create-agent",
+      "category": "development"
     },
     {
       "name": "olakai-add-monitoring",
-      "path": "skills/olakai-add-monitoring",
-      "description": "Add Olakai monitoring to an existing AI agent or LLM integration"
+      "description": "Add Olakai monitoring to an existing AI agent or LLM integration",
+      "source": "./skills/olakai-add-monitoring",
+      "category": "development"
     },
     {
       "name": "olakai-troubleshoot",
-      "path": "skills/olakai-troubleshoot",
-      "description": "Troubleshoot Olakai monitoring issues - missing events, KPI problems, SDK errors"
+      "description": "Troubleshoot Olakai monitoring issues - missing events, KPI problems, SDK errors",
+      "source": "./skills/olakai-troubleshoot",
+      "category": "development"
     }
   ]
 }
