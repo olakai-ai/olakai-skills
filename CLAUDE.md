@@ -28,8 +28,10 @@ olakai-skills/
 │           │   └── SKILL.md      # Create new agents with monitoring (~540 lines)
 │           ├── olakai-add-monitoring/
 │           │   └── SKILL.md      # Add monitoring to existing code (~680 lines)
-│           └── olakai-troubleshoot/
-│               └── SKILL.md      # Diagnose and fix issues (~610 lines)
+│           ├── olakai-troubleshoot/
+│           │   └── SKILL.md      # Diagnose and fix issues (~610 lines)
+│           └── generate-analytics-reports/
+│               └── SKILL.md      # Generate CLI-based analytics reports (~500 lines)
 ├── docs/
 │   └── publishing-guide.md       # Distribution & packaging guide
 ├── CLAUDE.md                     # This file
@@ -44,6 +46,7 @@ olakai-skills/
 | `olakai-create-agent` | ~540 | Build new AI agents from scratch with full observability |
 | `olakai-add-monitoring` | ~680 | Add Olakai to existing working AI code with minimal changes |
 | `olakai-troubleshoot` | ~610 | Diagnose missing events, KPI issues, SDK errors |
+| `generate-analytics-reports` | ~500 | Generate terminal-based analytics reports (usage, KPIs, risk, ROI) |
 
 Each skill follows YAML frontmatter + Markdown format with progressive disclosure (description loads at startup, full body on activation).
 
