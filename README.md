@@ -26,7 +26,7 @@ The **olakai-expert** agent bundles all three skills together, providing a singl
 
 ```bash
 # Add the Olakai skills marketplace
-/plugin marketplace add olakai/olakai-skills
+/plugin marketplace add olakai-ai/olakai-skills
 
 # Install individual skills
 /plugin install olakai-create-agent@olakai-skills
@@ -39,7 +39,7 @@ The **olakai-expert** agent bundles all three skills together, providing a singl
 Install for all your projects:
 
 ```bash
-git clone https://github.com/olakai/olakai-skills ~/.claude/skills/olakai-skills
+git clone https://github.com/olakai-ai/olakai-skills ~/.claude/skills/olakai-skills
 ```
 
 ### Option 3: Project-level Installation
@@ -47,12 +47,12 @@ git clone https://github.com/olakai/olakai-skills ~/.claude/skills/olakai-skills
 Install for a specific project (add to version control):
 
 ```bash
-git clone https://github.com/olakai/olakai-skills .claude/skills/olakai-skills
+git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skills
 ```
 
 ### Option 4: Claude Desktop / claude.ai
 
-Download the ZIP files from the [Releases](https://github.com/olakai/olakai-skills/releases) page and upload through **Settings > Capabilities > Skills**.
+Download the ZIP files from the [Releases](https://github.com/olakai-ai/olakai-skills/releases) page and upload through **Settings > Capabilities > Skills**.
 
 ### Installing the Bundled Agent
 
@@ -60,7 +60,7 @@ The plugin marketplace installs individual skills. To use the bundled **olakai-e
 
 ```bash
 # Clone the repo
-git clone https://github.com/olakai/olakai-skills /tmp/olakai-skills
+git clone https://github.com/olakai-ai/olakai-skills /tmp/olakai-skills
 
 # Copy agents to user-level (available in all projects)
 cp -r /tmp/olakai-skills/agents ~/.claude/agents/
