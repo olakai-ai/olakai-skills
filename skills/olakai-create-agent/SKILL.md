@@ -1,10 +1,25 @@
 ---
 name: olakai-create-agent
-description: Create a new AI agent with Olakai monitoring. Use when building AI features, workflows, or agents that need observability, KPI tracking, and governance.
+description: >
+  Create a new AI agent with Olakai monitoring from scratch.
+
+  AUTO-INVOKE when user wants to: build a new AI agent, create an AI workflow,
+  set up a new chatbot or copilot, implement an autonomous agent, design an
+  AI-powered feature, start a new project with AI observability, or add
+  KPI tracking and governance to a new AI system.
+
+  TRIGGER KEYWORDS: olakai, create agent, new agent, build agent, AI agent,
+  AI workflow, chatbot, copilot, autonomous agent, agent architecture,
+  agentic AI, assistive AI, observability setup, KPI tracking, governance,
+  new AI project, AI monitoring setup, agent from scratch.
+
+  DO NOT load for: adding monitoring to existing code (use olakai-add-monitoring),
+  troubleshooting existing agents (use olakai-troubleshoot), or generating reports
+  (use generate-analytics-reports).
 license: MIT
 metadata:
   author: olakai
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Create AI Agent with Olakai Monitoring

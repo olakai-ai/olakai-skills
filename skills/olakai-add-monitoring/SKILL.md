@@ -1,10 +1,25 @@
 ---
 name: olakai-add-monitoring
-description: Add Olakai monitoring to an existing AI agent. Use when you have working AI code that needs observability and analytics added.
+description: >
+  Add Olakai monitoring to an existing AI agent or LLM integration.
+
+  AUTO-INVOKE when user wants to: add monitoring to existing code, integrate
+  observability into a working agent, instrument an existing AI system,
+  add tracking to LLM calls, wrap OpenAI/Anthropic clients, add analytics
+  to working AI code, or retrofit monitoring to production AI.
+
+  TRIGGER KEYWORDS: olakai, add monitoring, integrate monitoring, instrument,
+  wrap client, observability, SDK integration, @olakai/sdk, olakai-sdk,
+  existing agent, existing code, add tracking, analytics, telemetry,
+  retrofit monitoring, existing LLM, existing OpenAI, existing Anthropic.
+
+  DO NOT load for: creating new agents from scratch (use olakai-create-agent),
+  troubleshooting issues (use olakai-troubleshoot), or generating reports
+  (use generate-analytics-reports).
 license: MIT
 metadata:
   author: olakai
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent

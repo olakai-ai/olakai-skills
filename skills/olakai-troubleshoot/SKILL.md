@@ -1,10 +1,24 @@
 ---
 name: olakai-troubleshoot
-description: Troubleshoot Olakai monitoring issues. Use when events aren't appearing, KPIs show wrong values, or custom data is missing.
+description: >
+  Troubleshoot Olakai monitoring issues when something isn't working.
+
+  AUTO-INVOKE when user mentions: events not appearing, KPIs showing wrong values,
+  KPIs showing strings instead of numbers, custom data missing, null KPIs,
+  authentication errors, CLI not working, events not associated with agent,
+  monitoring broken, SDK errors, or any Olakai-related problem.
+
+  TRIGGER KEYWORDS: olakai, troubleshoot, debug, not working, events missing,
+  KPI wrong, KPI null, KPI string, customData missing, authentication failed,
+  CLI error, no events, events not appearing, diagnose, fix olakai, broken,
+  SDK error, monitoring issue, API key invalid, events not tracked.
+
+  DO NOT load for: initial setup (use olakai-create-agent or olakai-add-monitoring),
+  or generating reports (use generate-analytics-reports).
 license: MIT
 metadata:
   author: olakai
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring

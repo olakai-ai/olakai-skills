@@ -28,7 +28,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.1.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.4.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -39,6 +39,10 @@ olakai-skills/
 │           └── generate-analytics-reports -> ../../../skills/generate-analytics-reports
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
+├── hooks/                        # Optional skill activation hooks
+│   ├── skill-activator.sh        # Hook script for auto-invocation
+│   ├── README.md                 # Hook installation instructions
+│   └── settings-snippet.json     # Settings configuration to copy
 ├── docs/
 │   └── publishing-guide.md       # Distribution & packaging guide
 ├── CLAUDE.md                     # This file
@@ -93,6 +97,35 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 ```
 
 This pattern MUST be preserved across all skills.
+
+---
+
+## Skill Auto-Invocation Guide
+
+Before answering Olakai-related questions, evaluate whether to load a skill:
+
+### Skill Selection Matrix
+
+| User Intent | Skill to Load | Keywords |
+|-------------|---------------|----------|
+| Build new AI agent | `olakai-create-agent` | create, new, build, start, design agent |
+| Add monitoring to existing code | `olakai-add-monitoring` | add, integrate, existing, wrap, instrument |
+| Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
+| View data/metrics | `generate-analytics-reports` | report, analytics, summary, trends, usage |
+
+### Invocation Pattern
+
+1. **EVALUATE**: Does this prompt relate to Olakai? Check for keywords above.
+2. **SELECT**: Match intent to the appropriate skill.
+3. **INVOKE**: Use `Skill("skill-name")` before proceeding.
+4. **EXECUTE**: Follow the skill's instructions.
+
+### Always Invoke olakai-expert Agent When:
+
+- User mentions "olakai" in any context
+- User asks about AI agent monitoring or observability
+- User mentions KPIs, governance, or event tracking for AI
+- User references olakai.yaml, olakai CLI, or Olakai SDKs
 
 ---
 
@@ -326,7 +359,7 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 
-1. Update version number (currently 1.1.0)
+1. Update version number (currently 1.4.0)
 2. Update version in all SKILL.md frontmatter metadata
 3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
 4. Update changelog if maintained
