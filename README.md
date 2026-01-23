@@ -112,6 +112,18 @@ olakai_config(os.getenv("OLAKAI_API_KEY"))
 instrument_openai()
 ```
 
+## Optional: Improved Skill Discovery
+
+For automatic skill activation (recommended for heavy Olakai users):
+
+```bash
+# Install activation hooks for improved auto-invocation rate
+cp hooks/skill-activator.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/skill-activator.sh
+```
+
+See `hooks/README.md` for full setup instructions.
+
 ## Documentation
 
 - [Olakai Documentation](https://app.olakai.ai/llms.txt)

@@ -1,6 +1,21 @@
 ---
 name: olakai-expert
-description: Olakai AI observability expert - helps create agents, add monitoring, troubleshoot issues, and generate analytics reports
+description: >
+  Olakai platform expert for AI agent monitoring, observability, and governance.
+
+  AUTO-INVOKE when user mentions: Olakai, olakai CLI, olakai.yaml, agent monitoring,
+  KPI tracking, AI governance, event logging, SDK integration, observability setup,
+  agent metrics, workflow monitoring, or any Olakai platform question.
+
+  CAPABILITIES: Creates new agents with monitoring, adds observability to existing
+  code, troubleshoots issues, generates analytics reports.
+
+  TRIGGER KEYWORDS: olakai, olakai-cli, monitoring, observability, KPI, governance,
+  agent tracking, event logging, SDK, @olakai/sdk, olakai-sdk, AI metrics,
+  AI observability, agent analytics, LLM monitoring, AI compliance.
+
+  DO NOT load for: general DevOps monitoring (Datadog, Grafana), generic
+  TypeScript/Python questions, or non-AI observability tools.
 skills: olakai-create-agent, olakai-add-monitoring, olakai-troubleshoot, generate-analytics-reports
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: inherit

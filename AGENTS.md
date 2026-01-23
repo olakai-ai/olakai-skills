@@ -96,6 +96,47 @@ Use the olakai-expert agent to set up monitoring for my AI chatbot
 
 The bundled agent is available when skills are installed via git clone (not individual skill installation).
 
+## Skill Invocation for AI Agents
+
+When working with Olakai in any AI coding agent:
+
+### Claude Code
+
+```bash
+Skill("olakai-create-agent")          # For new agents
+Skill("olakai-add-monitoring")        # For existing code
+Skill("olakai-troubleshoot")          # For debugging
+Skill("generate-analytics-reports")   # For analytics
+```
+
+### Other Agents (Cursor, Copilot, etc.)
+
+Reference this documentation before Olakai tasks:
+
+- **Creating agents**: See `skills/olakai-create-agent/SKILL.md`
+- **Adding monitoring**: See `skills/olakai-add-monitoring/SKILL.md`
+- **Troubleshooting**: See `skills/olakai-troubleshoot/SKILL.md`
+- **Reports**: See `skills/generate-analytics-reports/SKILL.md`
+
+### Trigger Keywords
+
+Invoke Olakai skills when user mentions:
+
+```
+olakai, monitoring, observability, KPI, governance, agent tracking,
+event logging, SDK integration, @olakai/sdk, olakai-sdk, AI metrics,
+agent monitoring, LLM observability, AI compliance, event pipeline
+```
+
+### Skill Selection Guide
+
+| User Intent | Skill to Load |
+|-------------|---------------|
+| Build new AI agent | `olakai-create-agent` |
+| Add monitoring to existing code | `olakai-add-monitoring` |
+| Something not working | `olakai-troubleshoot` |
+| View data/metrics/reports | `generate-analytics-reports` |
+
 ## Feedback
 
 Report issues at [github.com/olakai-ai/olakai-skills/issues](https://github.com/olakai-ai/olakai-skills/issues).

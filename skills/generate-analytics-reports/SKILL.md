@@ -1,10 +1,24 @@
 ---
 name: generate-analytics-reports
-description: Generate analytics reports from Olakai data using CLI commands. Use when users want usage summaries, KPI trends, risk analysis, or efficiency reports without accessing the web UI.
+description: >
+  Generate analytics reports from Olakai data using CLI commands.
+
+  AUTO-INVOKE when user wants: usage summaries, KPI trends, risk analysis,
+  ROI reports, efficiency metrics, agent comparisons, token usage reports,
+  cost analysis, compliance reports, or any analytics without using the web dashboard.
+
+  TRIGGER KEYWORDS: olakai, analytics, reports, usage summary, KPI trends,
+  risk analysis, ROI, efficiency, agent comparison, token usage, cost analysis,
+  metrics report, dashboard data, CLI analytics, terminal report, compliance,
+  usage report, event summary, performance metrics, AI usage stats.
+
+  DO NOT load for: setting up monitoring (use olakai-add-monitoring),
+  troubleshooting (use olakai-troubleshoot), or creating new agents
+  (use olakai-create-agent).
 license: MIT
 metadata:
   author: olakai
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Generate Analytics Reports
