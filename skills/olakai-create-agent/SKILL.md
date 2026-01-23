@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.4.0"
+  version: "1.5.0"
 ---
 
 # Create AI Agent with Olakai Monitoring
