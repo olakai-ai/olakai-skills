@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.5.0"
+  version: "1.6.0"
 ---
 
 # Add Olakai Monitoring to Existing Agent

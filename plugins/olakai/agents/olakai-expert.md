@@ -16,7 +16,7 @@ description: >
 
   DO NOT load for: general DevOps monitoring (Datadog, Grafana), generic
   TypeScript/Python questions, or non-AI observability tools.
-skills: olakai-get-started, olakai-create-agent, olakai-add-monitoring, olakai-troubleshoot, generate-analytics-reports
+skills: olakai-get-started, olakai-create-agent, olakai-add-monitoring, olakai-troubleshoot, generate-analytics-reports, olakai-planning
 tools: Read, Grep, Glob, Bash, Edit, Write
 model: inherit
 ---
@@ -130,6 +130,19 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 | Has existing AI code to monitor | `olakai-add-monitoring` |
 | Something not working | `olakai-troubleshoot` |
 | Wants usage/analytics data | `generate-analytics-reports` |
+| Creating a multi-step plan | `olakai-planning` |
+
+## Plan Mode Behavior
+
+When entering plan mode or when asked to create an implementation plan:
+
+1. **Always invoke `/olakai-planning` first** to structure the plan properly
+2. Follow the plan format template from that skill
+3. Include the Skill Reference table at the top of every plan
+4. Embed Context Injection Snippets (SDK patterns, CLI commands) in relevant steps
+5. Every step must specify which skill to invoke for detailed guidance
+
+**Why this matters**: After plan approval, context may be cleared. The executing agent won't have access to our domain knowledge. The plan must be self-contained with explicit skill references so the executor knows where to get help.
 
 ## Validation Commands
 

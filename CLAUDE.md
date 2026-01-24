@@ -39,7 +39,8 @@ olakai-skills/
 │           ├── olakai-create-agent -> ../../../skills/olakai-create-agent
 │           ├── olakai-add-monitoring -> ../../../skills/olakai-add-monitoring
 │           ├── olakai-troubleshoot -> ../../../skills/olakai-troubleshoot
-│           └── generate-analytics-reports -> ../../../skills/generate-analytics-reports
+│           ├── generate-analytics-reports -> ../../../skills/generate-analytics-reports
+│           └── olakai-planning -> ../../../skills/olakai-planning
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
 ├── hooks/                        # Optional skill activation hooks
@@ -77,6 +78,7 @@ olakai-skills/
 | `olakai-add-monitoring` | ~680 | Add Olakai to existing working AI code with minimal changes |
 | `olakai-troubleshoot` | ~610 | Diagnose missing events, KPI issues, SDK errors |
 | `generate-analytics-reports` | ~500 | Generate terminal-based analytics reports (usage, KPIs, risk, ROI) |
+| `olakai-planning` | ~350 | Structure implementation plans to survive context clearing |
 
 Each skill follows YAML frontmatter + Markdown format with:
 - `name`: Skill identifier
@@ -175,6 +177,7 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | Add monitoring to existing code | `olakai-add-monitoring` | add, integrate, existing, wrap, instrument |
 | Something not working | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `generate-analytics-reports` | report, analytics, summary, trends, usage |
+| Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
 
 ### Invocation Pattern
 
