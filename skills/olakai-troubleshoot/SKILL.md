@@ -335,9 +335,9 @@ customData: {
 
 | Problem | Solution |
 |---------|----------|
-| Field name case mismatch | Match exact case from `custom-data list` |
+| Field name case mismatch | Match exact case from `custom-data list --agent-id ID` |
 | customData not in options | Move to second argument of `create()` |
-| Missing CustomDataConfig | Create with `olakai custom-data create --name X --type NUMBER` |
+| Missing CustomDataConfig | Create with `olakai custom-data create --agent-id ID --name X --type NUMBER` |
 | Sending wrong data type | NUMBER fields need numbers, STRING fields need strings |
 
 ---
@@ -390,13 +390,13 @@ customData: {
 **Create CustomDataConfigs for every field you want to use in KPIs:**
 
 ```bash
-# For each field you need in KPIs, create a config
-olakai custom-data create --name "ItemsProcessed" --type NUMBER
-olakai custom-data create --name "SuccessRate" --type NUMBER
-olakai custom-data create --name "RandomField" --type STRING
+# For each field you need in KPIs, create a config (replace YOUR_AGENT_ID)
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "ItemsProcessed" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "SuccessRate" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "RandomField" --type STRING
 
-# Verify
-olakai custom-data list
+# Verify for this agent
+olakai custom-data list --agent-id YOUR_AGENT_ID
 ```
 
 **Best Practice:** Design your CustomDataConfigs FIRST, then write SDK code that sends only those fields.
@@ -577,7 +577,7 @@ If invalid, you'll see the error.
 
 **1. Ensure CustomDataConfig Exists**
 ```bash
-olakai custom-data create --name "YourVariable" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "YourVariable" --type NUMBER
 ```
 
 **2. Ensure SDK Sends the Field**
@@ -804,17 +804,17 @@ Events not appearing?
 KPIs showing strings?
 ├── Check formula storage → olakai kpis list --json
 ├── Formula is raw string → olakai kpis update ID --formula "X"
-└── Missing CustomDataConfig → olakai custom-data create
+└── Missing CustomDataConfig → olakai custom-data create --agent-id ID
 
 KPIs showing null?
 ├── Check customData sent → olakai activity get ID --json
 ├── Field missing → Add to customData in SDK
-├── CustomDataConfig missing → olakai custom-data create
+├── CustomDataConfig missing → olakai custom-data create --agent-id ID
 └── Type mismatch → NUMBER needs number, STRING needs string
 
 customData field not usable in KPIs?
-├── Check CustomDataConfig exists → olakai custom-data list
-├── Config missing → olakai custom-data create --name "Field" --type NUMBER
+├── Check CustomDataConfig exists → olakai custom-data list --agent-id ID
+├── Config missing → olakai custom-data create --agent-id ID --name "Field" --type NUMBER
 └── Case mismatch → Ensure exact case match between SDK and config
 
 Events not under agent?

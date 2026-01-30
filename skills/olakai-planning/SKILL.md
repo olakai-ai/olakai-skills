@@ -254,9 +254,9 @@ olakai kpis create --name "Name" --formula "X" --agent-id ID
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis update KPI_ID --formula "X"
 
-# CustomData (account-level: shared across ALL agents, unlike KPIs)
-olakai custom-data list [--json]
-olakai custom-data create --name "Name" --type NUMBER|STRING
+# CustomData (agent-scoped, like KPIs)
+olakai custom-data list [--agent-id ID] [--json]
+olakai custom-data create --agent-id ID --name "Name" --type NUMBER|STRING
 ```
 
 ---
@@ -297,18 +297,18 @@ Only CustomDataConfig fields can be used in KPI formulas!
 
 ### Commands:
 ```bash
-# Check existing configs
-olakai custom-data list --json
+# Check existing configs for this agent (replace YOUR_AGENT_ID)
+olakai custom-data list --agent-id YOUR_AGENT_ID --json
 
 # Create required configs (run each command)
-olakai custom-data create --name "ticketCategory" --type STRING
-olakai custom-data create --name "resolutionTime" --type NUMBER
-olakai custom-data create --name "customerSatisfaction" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "ticketCategory" --type STRING
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "resolutionTime" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "customerSatisfaction" --type NUMBER
 ```
 
 ### Validation:
 ```bash
-olakai custom-data list --json | jq '.[] | {name, type}'
+olakai custom-data list --agent-id YOUR_AGENT_ID --json | jq '.[] | {name, type}'
 # Should show all 3 fields with correct types
 ```
 

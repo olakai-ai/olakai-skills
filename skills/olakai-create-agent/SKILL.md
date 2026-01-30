@@ -248,26 +248,28 @@ Workflow: "Document Processing"
 For each custom metric from Step 1.2, create a CustomDataConfig:
 
 ```bash
+# Replace YOUR_AGENT_ID with the actual agent ID from step 2.1
+
 # For numeric metrics (can be used in KPI calculations)
-olakai custom-data create --name "ItemsProcessed" --type NUMBER --description "Count of items processed per run"
-olakai custom-data create --name "SuccessRate" --type NUMBER --description "Success ratio 0-1"
-olakai custom-data create --name "StepCount" --type NUMBER --description "Number of workflow steps executed"
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "ItemsProcessed" --type NUMBER --description "Count of items processed per run"
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "SuccessRate" --type NUMBER --description "Success ratio 0-1"
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "StepCount" --type NUMBER --description "Number of workflow steps executed"
 
 # For string metrics (for filtering/grouping, not calculations)
-olakai custom-data create --name "ExecutionId" --type STRING --description "Correlation ID for the execution"
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "ExecutionId" --type STRING --description "Correlation ID for the execution"
 
-# Verify all configs are created
-olakai custom-data list
+# Verify all configs are created for this agent
+olakai custom-data list --agent-id YOUR_AGENT_ID
 ```
 
 **What this enables:**
-- ✅ These field names become **context variables** in KPI formulas
+- ✅ These field names become **context variables** in KPI formulas for this agent
 - ✅ Values sent in SDK `customData` with these names are processed
 - ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
 ### 2.4 Create KPI Definitions
 
-> ⚠️ **KPIs are created for THIS agent only.** Unlike CustomDataConfigs (account-level, shared across all agents), each KPI is bound to one agent. Do NOT reuse KPI IDs from another agent — if multiple agents need the same metric, create the KPI separately for each.
+> ⚠️ **Both CustomDataConfigs and KPIs are created for THIS agent only.** Each config is bound to one agent. If multiple agents need the same fields, create the CustomDataConfig and KPI separately for each agent.
 
 Define KPIs that use your custom data:
 
@@ -737,7 +739,7 @@ Use these predefined task categories for the `task` field:
 # CLI Commands
 olakai login                           # Authenticate
 olakai agents create --name "Name"     # Create agent
-olakai custom-data create --name X --type NUMBER  # Create custom field
+olakai custom-data create --agent-id ID --name X --type NUMBER  # Create custom field
 olakai kpis create --formula "X" --agent-id ID    # Create KPI
 olakai activity list --agent-id ID     # View events
 
