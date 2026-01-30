@@ -341,8 +341,8 @@ with olakai_context(customData={"feature": "customer-support", "ticketId": "TICK
 Define metrics that aggregate your custom data:
 
 ```bash
-# First, create the custom data config
-olakai custom-data create --name "Priority" --type NUMBER
+# First, create the custom data config for your agent
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "Priority" --type NUMBER
 
 # Then create a KPI
 olakai kpis create \

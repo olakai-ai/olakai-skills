@@ -193,12 +193,12 @@ When implementing agents, coding assistants often:
 
 | Aspect | CustomDataConfig | KPI |
 |--------|-----------------|-----|
-| **Scope** | Account-level | Agent-level |
-| **Sharing** | Shared across all agents | Unique to one agent |
-| **Creation** | Create once, available everywhere | Create separately for each agent |
-| **CLI flag** | No `--agent-id` needed | `--agent-id` required |
+| **Scope** | Agent-level | Agent-level |
+| **Sharing** | Unique to one agent | Unique to one agent |
+| **Creation** | Create for each agent that needs it | Create separately for each agent |
+| **CLI flag** | `--agent-id` required | `--agent-id` required |
 
-CustomDataConfigs define the schema for fields your SDK sends — they are created once per account and apply to all agents. KPIs, however, are **bound to a single agent**. Even if two agents need the same KPI formula, you must create the KPI separately for each agent using `olakai kpis create --agent-id EACH_AGENT_ID`.
+CustomDataConfigs define the schema for fields your SDK sends — they are now **scoped to individual agents**. KPIs are also **bound to a single agent**. Both require `--agent-id` when creating. Legacy account-level CustomDataConfigs (created before this change) remain accessible to all agents but new configs must specify an agent.
 
 ---
 
@@ -414,8 +414,8 @@ olakai kpis validate --formula "X" --agent-id ID
 olakai kpis delete KPI_ID [--force]
 
 # Custom Data
-olakai custom-data list [--json]
-olakai custom-data create --name "Name" --type NUMBER|STRING [--description "Desc"]
+olakai custom-data list [--agent-id ID] [--json]
+olakai custom-data create --agent-id ID --name "Name" --type NUMBER|STRING [--description "Desc"]
 
 # Workflows
 olakai workflows create --name "Name"

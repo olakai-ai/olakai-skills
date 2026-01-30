@@ -399,27 +399,28 @@ olakai agents update YOUR_AGENT_ID --workflow WORKFLOW_ID
 
 #### 5.3 Create Custom Data Configs FIRST
 
-> ⚠️ **IMPORTANT**: Create configs for ALL fields you send in `customData`. Only registered fields can be used in KPIs.
+> ⚠️ **IMPORTANT**: Create configs for ALL fields you send in `customData`. Only registered fields can be used in KPIs. CustomDataConfigs are now agent-scoped, so use `--agent-id`.
 
 ```bash
+# Replace YOUR_AGENT_ID with the actual agent ID from step 5.1
 # For each field in your customData, create a config
-olakai custom-data create --name "DocumentId" --type STRING
-olakai custom-data create --name "DocumentType" --type STRING
-olakai custom-data create --name "StepCount" --type NUMBER
-olakai custom-data create --name "Success" --type NUMBER  # Use 1/0 for boolean
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "DocumentId" --type STRING
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "DocumentType" --type STRING
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "StepCount" --type NUMBER
+olakai custom-data create --agent-id YOUR_AGENT_ID --name "Success" --type NUMBER  # Use 1/0 for boolean
 
-# Verify all configs exist
-olakai custom-data list
+# Verify all configs exist for this agent
+olakai custom-data list --agent-id YOUR_AGENT_ID
 ```
 
 **What this enables:**
-- ✅ These field names become **context variables** in KPI formulas
+- ✅ These field names become **context variables** in KPI formulas for this agent
 - ✅ Values sent in SDK `customData` with these names are processed
 - ❌ Any `customData` field NOT listed here is ignored for KPI purposes
 
 #### 5.4 Create KPIs
 
-> ⚠️ **Create KPIs for THIS agent specifically.** KPIs are bound to a single agent and are not shared like CustomDataConfigs. Even if another agent has identical KPIs, you must create them again here with this agent's ID.
+> ⚠️ **Both CustomDataConfigs and KPIs are created for THIS agent specifically.** They are bound to a single agent. If another agent needs the same fields/metrics, create them again with that agent's ID.
 
 ```bash
 olakai kpis create \
@@ -696,7 +697,7 @@ Fix with: `olakai kpis update KPI_ID --formula "MyVariable"`
 ```
 
 Fix by ensuring:
-1. CustomDataConfig exists: `olakai custom-data create --name "MyVariable" --type NUMBER`
+1. CustomDataConfig exists: `olakai custom-data create --agent-id ID --name "MyVariable" --type NUMBER`
 2. Field name case matches exactly (case-sensitive)
 3. SDK actually sends the field in customData
 
