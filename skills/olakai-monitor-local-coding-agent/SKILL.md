@@ -2,17 +2,18 @@
 name: olakai-monitor-local-coding-agent
 description: |
   Set up and self-heal Olakai monitoring for the coding tool you are using —
-  Claude Code, OpenAI Codex CLI, or Cursor. Installs hooks, creates the agent
-  record, and explains how to enrich events with KPIs. This is the skill for
-  "monitor my coding tool itself" (not for instrumenting your own agent's source
-  code with the SDK — that is olakai-integrate).
-  AUTO-INVOKE when user wants to: monitor Claude Code / Codex / Cursor sessions,
+  Claude Code, OpenAI Codex CLI, Cursor, Google Gemini CLI, or Antigravity CLI. Installs hooks,
+  creates the agent record, and explains how to enrich events with KPIs. This is
+  the skill for "monitor my coding tool itself" (not for instrumenting your own
+  agent's source code with the SDK — that is olakai-integrate).
+  AUTO-INVOKE when user wants to: monitor Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI sessions,
   monitor THIS coding tool, add observability to a local coding agent, track my
   own coding-assistant usage, set up olakai monitoring in this workspace, see
   what is being monitored on this machine, check if monitoring is working, or
   enable / repair hooks-based monitoring for any local coding agent.
   TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, monitor this tool,
-  monitor claude code, monitor codex, monitor cursor, codex cli, cursor hooks,
+  monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity,
+  codex cli, cursor hooks, gemini cli, gemini-cli hooks, antigravity cli, antigravity, agy,
   local coding agent, local agent monitoring, olakai hooks, olakai monitor init,
   olakai monitor list, olakai monitor doctor, olakai monitor repair, monitor
   workspace, track sessions, is my monitoring working, monitoring not working,
@@ -36,24 +37,26 @@ This skill sets up hooks-based monitoring for **local coding agents** and teache
 
 | You want to… | Use |
 |--------------|-----|
-| Monitor **the coding tool itself** (Claude Code / Codex / Cursor sessions) | **this skill** |
+| Monitor **the coding tool itself** (Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI sessions) | **this skill** |
 | Check / fix your **own** monitoring ("is it working?", "no events") | **this skill** → [Self-healing](#self-healing-diagnose-and-repair-your-own-monitoring) |
 | Instrument **your own agent's source code** with the `@olakai/sdk` / `olakai-sdk` | `olakai-integrate` |
 | Build a brand-new agent project from scratch | `olakai-new-project` |
 | Debug SDK / KPI / event issues unrelated to a coding tool | `olakai-troubleshoot` |
 
-Three tools are supported, all behind the same `olakai monitor` command, gated by a `--tool` flag:
+Five tools are supported, all behind the same `olakai monitor` command, gated by a `--tool` flag:
 
 | Tool | `--tool` value | Minimum version |
 |------|----------------|-----------------|
 | Claude Code | `claude-code` | any current version |
 | OpenAI Codex CLI | `codex` | `0.124.0` (stable hooks) |
 | Cursor | `cursor` | `1.7` (hooks beta; validated against `3.x`) |
+| Gemini CLI | `gemini-cli` | `0.26.0` |
+| Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
 > **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade with `npm install -g olakai-cli@latest`.
 
 **What you get:**
-- Activity tracking on the **AI Coding Apps** tab in **Coding IQ → AI Impact** — a single table with all three tools' agents, filterable by source (`All / Claude Code / Codex / Cursor`).
+- Activity tracking on the **AI Coding Apps** tab in **Coding IQ → AI Impact** — a single table with all five tools' agents, filterable by source (`All / Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI`).
 - Session-level metrics (tokens, turns, model)
 - KPI evaluation on local agent traffic (Time Saved, Value Created, Governance Compliance, ROI)
 - Governance signals and policy enforcement
@@ -93,10 +96,12 @@ olakai agents mine --source codex --json
 | Claude Code | **Workspace** | `.claude/settings.json` (this workspace only) | `.olakai/monitor-claude-code.json` |
 | Codex CLI | **Global** | `~/.codex/config.toml` (all workspaces) | `.olakai/monitor-codex.json` |
 | Cursor | **Global** | `~/.cursor/hooks.json` (all workspaces) | `.olakai/monitor-cursor.json` |
+| Gemini CLI | **Global** | `~/.gemini/settings.json` (all workspaces) | `.olakai/monitor-gemini-cli.json` |
+| Antigravity | **Global** | `~/.gemini/config/hooks.json` (all workspaces) | `.olakai/monitor-antigravity.json` |
 
-For all three tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
+For all five tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
 
-> ⚠️ **Unattributed activity caveat (Codex / Cursor).** Because Codex and Cursor install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
+> ⚠️ **Unattributed activity caveat (Codex / Cursor / Gemini CLI / Antigravity).** Because Codex, Cursor, Gemini CLI, and Antigravity install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor/Gemini CLI/Antigravity activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
 >
 > Claude Code does **not** have this caveat — its hooks are workspace-scoped, so they only fire where you installed them.
 
@@ -109,7 +114,7 @@ If you are an installed coding agent and your monitoring seems broken (no events
 olakai monitor list
 
 # 2. DIAGNOSE — ordered health-check chain (registry → config → hooks → key → agent → events).
-olakai monitor doctor --tool claude-code         # or codex / cursor; --all for every workspace
+olakai monitor doctor --tool claude-code         # or codex / cursor / gemini-cli / antigravity; --all for every workspace
 
 # 3. FIX — idempotent, best-effort auto-repair of what doctor flagged.
 olakai monitor doctor --tool claude-code --fix
@@ -146,8 +151,10 @@ If you don't know which tool is in this workspace, run `olakai monitor init` wit
 ```text
 Are you monitoring …
 ├── Anthropic Claude Code? → --tool claude-code
-├── OpenAI Codex CLI?      → --tool codex     (requires Codex CLI ≥ 0.124.0)
-└── Cursor IDE/CLI?        → --tool cursor    (requires Cursor ≥ 1.7, hooks in beta)
+├── OpenAI Codex CLI?      → --tool codex       (requires Codex CLI ≥ 0.124.0)
+├── Cursor IDE/CLI?        → --tool cursor      (requires Cursor ≥ 1.7, hooks in beta)
+├── Google Gemini CLI?     → --tool gemini-cli  (requires Gemini CLI ≥ 0.26.0)
+└── Google Antigravity CLI? → --tool antigravity  (requires recent agy with hooks, validated 1.0.4)
 ```
 
 You can install monitoring for **multiple tools** in the same workspace — each tool stores its config in its own settings file and creates its own agent record.
@@ -274,6 +281,84 @@ In addition to the standard fields (prompt, response, tokens, modelName, chatId,
 - `userEmail` — automatically populated from the Cursor hook payload, so per-user analytics work without explicit identification
 - `source` — `"cursor"`
 
+## Quick Setup — Gemini CLI
+
+### Step 1: Initialize monitoring
+
+```bash
+olakai monitor init --tool gemini-cli
+```
+
+**What it does:**
+1. Creates an agent with `AgentSource.GEMINI_CLI` on your Olakai account
+2. Merges hook entries into `~/.gemini/settings.json` (**global** — fires in every workspace). The hooks cover `SessionStart`, `SessionEnd`, `BeforeModel`, `AfterModel`, `BeforeTool`, and `AfterTool` — only `AfterModel` emits a monitoring event, while the others maintain sidecar session state.
+3. Saves configuration to `.olakai/monitor-gemini-cli.json` (API key, agent ID, endpoint) and records this workspace in `~/.olakai/registry.json`.
+
+> **Gemini CLI ≥ 0.26.0 is required.** The hooks API used by this integration is only available from `0.26.0` (GA 2026-01-28) onward. Check with `gemini --version` before running init.
+>
+> **Global-hook caveat:** because the Gemini CLI hooks are global, running in a workspace with no `.olakai/monitor-gemini-cli.json` produces **no event** (silent exit). See [Scope is honest per tool](#scope-is-honest-per-tool).
+
+### Step 2: Verify
+
+```bash
+olakai monitor status --tool gemini-cli
+olakai monitor doctor --tool gemini-cli
+```
+
+### What gets captured (Gemini CLI)
+
+The hooks merged into `~/.gemini/settings.json` span the full session lifecycle (`SessionStart`, `SessionEnd`, `BeforeModel`, `AfterModel`, `BeforeTool`, `AfterTool`). Only `AfterModel` emits a monitoring event; the other hooks maintain sidecar session state (tool counts, session identity) so the emitted event is complete. Each event captures:
+
+- `hookEvent` — the hook that fired (`AfterModel` for emitted events)
+- `sessionId` — Gemini CLI session identifier, groups all turns of a conversation
+- `cwd` — the workspace directory the session ran in
+- `inputTokens` / `outputTokens` — token usage for the turn
+- `toolCallCount` — number of tool calls observed in the session via the `BeforeTool` / `AfterTool` hooks
+- `toolNames` — the names of the tools invoked
+- `source` — `"gemini-cli"`
+
+## Quick Setup — Antigravity CLI
+
+### Step 1: Initialize monitoring
+
+```bash
+olakai monitor init --tool antigravity
+```
+
+**What it does:**
+1. Creates an agent with `AgentSource.ANTIGRAVITY` on your Olakai account
+2. Merges a single `Stop` hook entry into `~/.gemini/config/hooks.json` (**global** — fires in every workspace). The `Stop` hook fires at the end of each agy turn and emits one monitoring event.
+3. Saves configuration to `.olakai/monitor-antigravity.json` (API key, agent ID, endpoint) and records this workspace in `~/.olakai/registry.json`.
+
+> **A recent `agy` with hooks support is required** (validated against `agy` v1.0.4). Antigravity CLI (`agy`) is Google's agentic coding CLI. The integration relies on the `Stop` hook, so older builds without hooks support will not emit events.
+>
+> **Interactive-only:** the `Stop` hook only fires in interactive `agy` sessions. Headless runs (`agy -p`) skip hooks entirely, so no event is sent for non-interactive invocations.
+>
+> **No token counts:** agy's hook payload carries no usage metadata, so emitted events have no input/output token counts. Olakai still computes its own model-based cost estimate.
+>
+> **Global-hook caveat:** because the Antigravity hook is global, running it in a workspace with no `.olakai/monitor-antigravity.json` produces **no event** (silent exit). It is also written to `~/.gemini/config/hooks.json`, a *different* file from Gemini CLI's `~/.gemini/settings.json`, so the two coexist cleanly. See [Scope is honest per tool](#scope-is-honest-per-tool).
+
+### Step 2: Verify
+
+```bash
+olakai monitor status --tool antigravity
+olakai monitor doctor --tool antigravity
+```
+
+### What gets captured (Antigravity CLI)
+
+The `Stop` hook reads agy's transcript JSONL to reconstruct the turn. Each event captures:
+
+- `prompt` — the last user turn from agy's transcript
+- `response` — the agent's final response for the turn
+- `customData.hookEvent` — the hook that fired (`Stop`)
+- `customData.conversationId` — agy conversation identifier, groups all turns of a conversation
+- `customData.cwd` — the workspace directory the session ran in
+- `customData.terminationReason` — why the turn ended
+- `source` — `"antigravity"`
+
+> **Note — interactive-only and no token counts.** Antigravity events are only produced in interactive `agy` sessions (headless `agy -p` skips hooks), and agy's payload has **no usage metadata**, so emitted events have no token counts.
+
 ## Pasted API key validation
 
 When you select an **existing agent** during `olakai monitor init` and the CLI asks you to paste the API key, the CLI validates that the key actually resolves to the agent you picked:
@@ -304,7 +389,7 @@ olakai activity get EVENT_ID --json | jq '{source, customData, kpiData}'
 
 Confirm:
 - Event exists with a recent timestamp
-- `source` is `"claude-code"`, `"codex"`, or `"cursor"` (matches your `--tool`)
+- `source` is `"claude-code"`, `"codex"`, `"cursor"`, `"gemini-cli"`, or `"antigravity"` (matches your `--tool`)
 - `prompt`, `response`, `tokens`, and `modelName` are populated (not empty/null)
 - `customData` contains session metadata
 - For Cursor specifically, `userEmail` is set from the hook payload
@@ -377,7 +462,7 @@ olakai kpis create --name "Session Sentiment" \
 olakai monitor list                                       # MACHINE: everything monitored on this box
 olakai monitor doctor --tool <tool>                       # ordered health check (--all for every workspace)
 olakai monitor status --tool <tool>                       # quick single-workspace status
-olakai agents mine [--source claude-code|codex|cursor]    # ACCOUNT: your coding agents
+olakai agents mine [--source claude-code|codex|cursor|gemini-cli|antigravity]    # ACCOUNT: your coding agents
 
 # Events + KPIs for one agent
 olakai activity list --agent-id AGENT_ID --limit 10
@@ -385,7 +470,7 @@ olakai activity sessions --agent-id AGENT_ID              # decoration status (D
 olakai activity kpis --agent-id AGENT_ID --json
 ```
 
-**Dashboard:** Navigate to **Coding IQ → AI Impact → AI Coding Apps** at https://app.olakai.ai. The unified table shows agents from all three tools side-by-side, with a **source filter chip** (`All / Claude Code / Codex / Cursor`, default `All`).
+**Dashboard:** Navigate to **Coding IQ → AI Impact → AI Coding Apps** at https://app.olakai.ai. The unified table shows agents from all five tools side-by-side, with a **source filter chip** (`All / Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI`, default `All`).
 
 ## Agent lifecycle (account-wide)
 
@@ -410,11 +495,13 @@ Each tool's monitoring is uninstalled independently:
 olakai monitor disable --tool claude-code
 olakai monitor disable --tool codex
 olakai monitor disable --tool cursor
+olakai monitor disable --tool gemini-cli
+olakai monitor disable --tool antigravity
 ```
 
 **What this does:**
 - Removes the registered hooks from the tool's settings file
-- Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` (and any legacy `.claude/olakai-monitor.json`)
+- Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` / `monitor-gemini-cli.json` / `monitor-antigravity.json` (and any legacy `.claude/olakai-monitor.json`)
 - Removes this workspace's entry from the machine registry (`~/.olakai/registry.json`)
 
 **What this does NOT do:**
@@ -476,17 +563,19 @@ Use `/olakai-troubleshoot` for comprehensive diagnostics including API key valid
 olakai monitor init --tool claude-code           # Claude Code (workspace-scoped hooks)
 olakai monitor init --tool codex                 # Codex CLI (>= 0.124.0, global hooks)
 olakai monitor init --tool cursor                # Cursor (>= 1.7, hooks beta, global hooks)
+olakai monitor init --tool gemini-cli            # Gemini CLI (>= 0.26.0, global hooks)
+olakai monitor init --tool antigravity           # Antigravity CLI (recent agy w/ hooks, validated 1.0.4, global hooks)
 
 # See what's monitored (two lenses)
 olakai monitor list                              # MACHINE: everything on this box + drift flags
-olakai agents mine [--source claude-code|codex|cursor]   # ACCOUNT: agents across the whole account
+olakai agents mine [--source claude-code|codex|cursor|gemini-cli|antigravity]   # ACCOUNT: agents across the whole account
 
 # Diagnose + repair your own monitoring
 olakai monitor doctor --tool <tool> [--fix] [--recreate-missing]
 olakai monitor doctor --all                      # every workspace on this machine
 olakai monitor repair --tool <tool>              # forceful re-init, preserves agent linkage
-olakai monitor status --tool <claude-code|codex|cursor>
-olakai monitor disable --tool <claude-code|codex|cursor>
+olakai monitor status --tool <claude-code|codex|cursor|gemini-cli|antigravity>
+olakai monitor disable --tool <claude-code|codex|cursor|gemini-cli|antigravity>
 
 # Agent lifecycle (account-wide, backend record)
 olakai agents archive AGENT_ID [--unarchive]
