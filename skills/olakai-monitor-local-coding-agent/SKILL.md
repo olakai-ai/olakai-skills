@@ -97,7 +97,7 @@ olakai agents mine --source codex --json
 | Cursor | **Global** | `~/.cursor/hooks.json` (all workspaces) | `.olakai/monitor-cursor.json` |
 | Gemini CLI | **Global** | `~/.gemini/settings.json` (all workspaces) | `.olakai/monitor-gemini-cli.json` |
 
-For all three tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
+For all four tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
 
 > ⚠️ **Unattributed activity caveat (Codex / Cursor / Gemini CLI).** Because Codex, Cursor, and Gemini CLI install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor/Gemini CLI activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
 >
