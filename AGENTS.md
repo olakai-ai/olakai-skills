@@ -28,7 +28,7 @@ olakai-skills/
 │   ├── olakai-reports/
 │   │   └── SKILL.md              # Generate CLI-based analytics reports (~500 lines)
 │   ├── olakai-monitor-local-coding-agent/
-│   │   └── SKILL.md              # Setup + routing for Claude Code, Codex CLI, Cursor monitoring (~500 lines)
+│   │   └── SKILL.md              # Setup + routing for Claude Code, Codex CLI, Cursor, Gemini CLI monitoring (~500 lines)
 │   ├── olakai-monitor-doctor/
 │   │   └── SKILL.md              # Self-heal monitoring: list / doctor / repair (~220 lines)
 │   └── olakai-monitor-claude-code/
@@ -88,7 +88,7 @@ olakai-skills/
 | `olakai-troubleshoot` | ~610 | Diagnose and fix issues with events, KPIs, custom data, or SDK integration |
 | `olakai-reports` | ~500 | Generate usage summaries, KPI trends, ROI reports from the terminal |
 | `olakai-planning` | ~350 | Create detailed implementation plans that can be executed independently |
-| `olakai-monitor-local-coding-agent` | ~500 | Setup + routing for local coding agent monitoring — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`), two-lens model, scope honesty |
+| `olakai-monitor-local-coding-agent` | ~500 | Setup + routing for local coding agent monitoring — Claude Code, Codex CLI, Cursor, Gemini CLI (`olakai monitor init --tool <tool>`), two-lens model, scope honesty |
 | `olakai-monitor-doctor` | ~220 | Self-heal monitoring — `olakai monitor list` / `doctor [--fix]` / `repair`, drift diagnosis, agent lifecycle |
 | `olakai-monitor-claude-code` | ~10 | Redirect stub — points to `olakai-monitor-local-coding-agent` (kept so existing references resolve) |
 
@@ -248,8 +248,8 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | **Not set up yet** | `olakai-get-started` | get started, setup, install, signup, account, new to olakai |
 | Build new AI agent | `olakai-new-project` | create, new, build, start, design agent |
 | Add monitoring to existing code | `olakai-integrate` | add, integrate, existing, wrap, instrument |
-| Monitor a local coding agent (Claude Code, Codex CLI, Cursor) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, olakai monitor init, local coding agent, hooks |
-| Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor, fix monitoring, agent 404, agents mine |
+| Monitor a local coding agent (Claude Code, Codex CLI, Cursor, Gemini CLI) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, monitor gemini cli, olakai monitor init, local coding agent, hooks |
+| Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor/gemini-cli, fix monitoring, agent 404, agents mine |
 | Something not working (SDK / KPI / event issues) | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
@@ -415,7 +415,7 @@ olakai agents list [--json]
 olakai agents create --name "Name" [--description "Desc"] [--with-api-key] [--json]
 olakai agents get AGENT_ID [--json]
 olakai agents update AGENT_ID [--name "Name"] [--workflow WORKFLOW_ID]
-olakai agents mine [--source claude-code|codex|cursor] [--json]   # account-wide: your coding agents (>= 0.7.0)
+olakai agents mine [--source claude-code|codex|cursor|gemini-cli] [--json]   # account-wide: your coding agents (>= 0.7.0)
 olakai agents archive AGENT_ID [--unarchive]                      # archive/unarchive (>= 0.7.0, needs current backend)
 olakai agents rename AGENT_ID "New Name"                          # rename (>= 0.7.0, needs current backend)
 olakai agents delete AGENT_ID                                     # permanent delete
@@ -442,10 +442,10 @@ olakai custom-data create --agent-id ID --name "Name" --type NUMBER|STRING [--de
 olakai workflows create --name "Name"
 
 # Local Coding Agent Monitoring (hooks-based)
-olakai monitor init --tool claude-code|codex|cursor      # Install hooks for the chosen tool
-olakai monitor status --tool claude-code|codex|cursor    # Verify hook + config installation
-olakai monitor disable --tool claude-code|codex|cursor   # Remove hooks and local config
-olakai monitor hook <event> --tool claude-code|codex|cursor  # Internal hook invoker (called by the registered hook command)
+olakai monitor init --tool claude-code|codex|cursor|gemini-cli      # Install hooks for the chosen tool
+olakai monitor status --tool claude-code|codex|cursor|gemini-cli    # Verify hook + config installation
+olakai monitor disable --tool claude-code|codex|cursor|gemini-cli   # Remove hooks and local config
+olakai monitor hook <event> --tool claude-code|codex|cursor|gemini-cli  # Internal hook invoker (called by the registered hook command)
 # --- Visibility + self-healing (require olakai-cli >= 0.7.0) ---
 olakai monitor list [--json]                             # MACHINE lens: every monitored workspace on this box,
                                                          #   grouped by tool, with scope + agent + drift flag.
@@ -465,10 +465,11 @@ olakai monitor repair --tool <t>                         # Forceful re-init pres
 # When picking an existing agent during init, the CLI calls GET /api/monitoring/prompt/me with the
 # pasted key and aborts (default n) if the resolved agent doesn't match the picked one.
 # Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.json);
-# Codex and Cursor install hooks GLOBALLY (~/.codex/config.toml, ~/.cursor/hooks.json). Per-workspace
-# agent linkage for all three lives in .olakai/monitor-<tool>.json. Because Codex/Cursor hooks are global,
-# their hook fires in workspaces with no .olakai config and silent-exits (activity NOT attributed to any
-# agent) — that is why "where am I monitoring" is a machine-local fact tracked in ~/.olakai/registry.json.
+# Codex, Cursor, and Gemini CLI install hooks GLOBALLY (~/.codex/config.toml, ~/.cursor/hooks.json,
+# ~/.gemini/settings.json). Per-workspace agent linkage for all four lives in .olakai/monitor-<tool>.json.
+# Because Codex/Cursor/Gemini CLI hooks are global, their hook fires in workspaces with no .olakai config
+# and silent-exits (activity NOT attributed to any agent) — that is why "where am I monitoring" is a
+# machine-local fact tracked in ~/.olakai/registry.json.
 ```
 
 ### SDK Patterns Referenced in Skills
