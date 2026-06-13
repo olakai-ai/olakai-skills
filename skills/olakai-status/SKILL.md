@@ -290,7 +290,7 @@ This honesty is the whole point of the feature — a fabricated profile is worse
 Suggested practice: <growthEdge.suggestedPatternKey>
 ```
 
-- Dimension display order: Delegation, Direction, Verification, Product Judgment, Spend Efficiency, Preparation.
+- Dimension display order: Delegation, Direction, Verification, Product Judgment, Preparation, Spend Efficiency.
 - Format cents the same way as the status digest (divide by 100, two decimals).
 - If `roi.secretsIncidentCount > 0`, add a ⚠️ line: "<n> secrets incident(s) this month."
 - Close with a link to the full report (the CLI prints `reportUrl` in `--json`).
