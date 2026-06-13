@@ -20,12 +20,14 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.15.0"
+  version: "1.16.0"
 ---
 
 # Olakai Developer Status Digest
 
 This skill fetches your Olakai Coding IQ status and formats it as a clean in-terminal digest — monitoring health, personal spend, and budget — without leaving Claude Code.
+
+It can also surface your **Builder Profile** — your AI-collaboration archetype, six dimension scores, and personal ROI — via `olakai profile`. See the [Builder Profile](#builder-profile-olakai-profile) section below.
 
 ## Step 1: Check prerequisites
 
@@ -182,6 +184,130 @@ Collect all applicable items and append an `### Action Items` section at the end
 ### Action Items
 - [ ] Your forecast (80.6%) is approaching your budget limit ($50.00). Contact your admin if you need a higher limit.
 ```
+
+---
+
+## Builder Profile (`olakai profile`)
+
+When the user asks about their **Builder Profile**, their **archetype**, their AI-collaboration **dimension scores**, or their **personal ROI / leaked spend** (as opposed to the spend/budget snapshot above), use `olakai profile` instead of `olakai status`.
+
+Requires `olakai-cli >= 0.10.0`.
+
+### Step 1: Fetch the profile
+
+```bash
+olakai profile --json 2>&1
+```
+
+Parse the output as JSON. The shape is:
+
+```json
+{
+  "backend": {
+    "found": true,
+    "reason": "ok",
+    "profile": {
+      "identity": { "found": true, "displayName": "Walt Mann" },
+      "episodeCount": 5,
+      "dimensions": {
+        "delegation":       { "meanScore": 6.2, "evidenceCount": 5 },
+        "direction":        { "meanScore": 6.8, "evidenceCount": 5 },
+        "verification":     { "meanScore": 7.6, "evidenceCount": 5 },
+        "product_judgment": { "meanScore": 6.4, "evidenceCount": 5 },
+        "preparation":      { "meanScore": 4.2, "evidenceCount": 5 },
+        "spend_efficiency": { "meanScore": 4.8, "evidenceCount": 5 }
+      },
+      "archetype": {
+        "dominant":  { "dimension": "verification", "archetype": "The Inspector", "meanScore": 7.6, "evidenceCount": 5 },
+        "secondary": null
+      },
+      "growthEdge": {
+        "dimension": "preparation", "archetype": "The Architect", "meanScore": 4.2, "evidenceCount": 5,
+        "citedRationale": "...", "suggestedPatternKey": "plan_before_build"
+      },
+      "roi": {
+        "personalSpendCents": 74210,
+        "costPerCommitCents": null,
+        "outcomeDataAvailable": false,
+        "leakedSpendCents": 2948,
+        "secretsIncidentCount": 0,
+        "roiMultiplier": null,
+        "spendEfficiency": { "score": 7, "rationale": "4% leak rate; 0% over-provisioned spend" }
+      },
+      "reducedFidelity": false,
+      "narrative": { "archetypeNarrative": "...", "growthEdgeNarrative": "..." },
+      "narrativeUnavailable": false
+    }
+  },
+  "backendError": null
+}
+```
+
+`backendError` is one of: `null`, `"not logged in"`, `"session expired"`, `"unreachable"`.
+
+### Step 2: The honesty contract (do NOT break this)
+
+The backend deliberately returns `null` for any value it cannot ground in evidence. **Never invent a number to fill a gap.** Specifically:
+
+| Field | When `null` / empty | What to render |
+|-------|---------------------|----------------|
+| `dimensions.<key>.meanScore` is `null`, missing, or `evidenceCount = 0` | dimension has no evidence | "no evidence yet" — **never** a middle score like 5/10 |
+| `roi.costPerCommitCents` is `null` | no shipped-outcome data | "insufficient outcome data" — **never** "$0" |
+| `roi.roiMultiplier` is `null` | outcomes not measurable | "insufficient outcome data" — **never** "100%" or "1x" |
+| `roi.leakedSpendCents` is `null` | not computed | "—" |
+| `roi.leakedSpendCents = 0` | computed, no leak | "none detected" |
+| `profile.narrativeUnavailable = true` | narrative generation failed | omit the narrative lines; fall back to `growthEdge.citedRationale` only |
+
+This honesty is the whole point of the feature — a fabricated profile is worse than an honest "not enough data yet."
+
+### Step 3: Format as a markdown digest
+
+```markdown
+## Your Builder Profile
+
+**<archetype.dominant.archetype>** — <meanScore>/10 across <evidenceCount> episodes
+<if secondary present:> Secondary strength: <archetype.secondary.archetype> (<meanScore>/10)
+
+### Dimensions
+| Dimension | Score |
+|-----------|-------|
+| Delegation | <score>/10 or "no evidence yet" |
+| Direction | ... |
+| Verification | ... |
+| Product Judgment | ... |
+| Preparation | ... |
+| Spend Efficiency | ... |
+
+### Personal ROI (this month)
+- AI spend: **$<personalSpendCents formatted>**
+- Cost per commit: $<costPerCommitCents formatted> *or* "insufficient outcome data"
+- Top leak: $<leakedSpendCents formatted> leaked (<spendEfficiency.rationale>) *or* "none detected"
+- ROI: <roiMultiplier>x *or* "insufficient outcome data"
+
+### Growth Edge
+**<growthEdge.archetype>** (<meanScore>/10)
+<narrative.growthEdgeNarrative, or growthEdge.citedRationale if narrative unavailable>
+Suggested practice: <growthEdge.suggestedPatternKey>
+```
+
+- Dimension display order: Delegation, Direction, Verification, Product Judgment, Spend Efficiency, Preparation.
+- Format cents the same way as the status digest (divide by 100, two decimals).
+- If `roi.secretsIncidentCount > 0`, add a ⚠️ line: "<n> secrets incident(s) this month."
+- Close with a link to the full report (the CLI prints `reportUrl` in `--json`).
+
+### Graceful no-profile
+
+If `backend.found = false`, `backend.profile = null`, or a `backendError` is present, show ONE friendly line and stop — never a stack trace, never a fabricated profile:
+
+| Condition | Message |
+|-----------|---------|
+| `backendError = "not logged in"` | Log in with `olakai login` to see your Builder Profile. |
+| `backendError = "session expired"` | Session expired — run `olakai login` to refresh. |
+| `backendError = "unreachable"` | Could not reach Olakai; try again when you're back online. |
+| `reason = "opted_out"` | Your Builder Profile is turned off; re-enable it in Olakai settings. |
+| `reason = "insufficient_data"` (or any other not-found) | Not enough coding sessions yet — your profile appears after your first few analyzed sessions. |
+
+The CLI's human output (`olakai profile`, no `--json`) already renders all of this correctly; prefer `--json` only when you want to reformat into the conversation.
 
 ---
 

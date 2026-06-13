@@ -94,7 +94,7 @@ olakai-skills/
 | `olakai-monitor-local-coding-agent` | ~500 | Setup + routing for local coding agent monitoring — Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI (`olakai monitor init --tool <tool>`), two-lens model, scope honesty |
 | `olakai-monitor-doctor` | ~220 | Self-heal monitoring — `olakai monitor list` / `doctor [--fix]` / `repair`, drift diagnosis, agent lifecycle |
 | `olakai-monitor-claude-code` | ~10 | Redirect stub — points to `olakai-monitor-local-coding-agent` (kept so existing references resolve) |
-| `olakai-status` | ~100 | In-terminal Coding IQ status digest — monitoring health, personal spend, and budget (invoked as `/olakai`) |
+| `olakai-status` | ~280 | In-terminal Coding IQ status digest — monitoring health, personal spend, budget, and Builder Profile (`olakai status` + `olakai profile`; invoked as `/olakai`) |
 
 Each skill follows YAML frontmatter + Markdown format with:
 - `name`: Skill identifier
@@ -448,6 +448,7 @@ olakai workflows create --name "Name"
 
 # Developer Coding IQ Status Digest
 olakai status [--json]                                   # Show monitoring health, spend, and budget (/olakai skill)
+olakai profile [--json]                                  # Builder Profile: archetype, dimension scores, personal ROI (>= 0.10.0, /olakai skill)
 
 # Local Coding Agent Monitoring (hooks-based)
 olakai monitor init --tool claude-code|codex|cursor|gemini-cli|antigravity      # Install hooks for the chosen tool
