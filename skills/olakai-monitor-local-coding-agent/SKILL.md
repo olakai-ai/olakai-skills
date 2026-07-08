@@ -9,8 +9,9 @@ description: |
   AUTO-INVOKE when user wants to: monitor Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI sessions,
   monitor THIS coding tool, add observability to a local coding agent, track my
   own coding-assistant usage, set up olakai monitoring in this workspace, see
-  what is being monitored on this machine, check if monitoring is working, or
-  enable / repair hooks-based monitoring for any local coding agent.
+  what is being monitored on this machine, check if monitoring is working,
+  enable / repair hooks-based monitoring for any local coding agent, or (as an
+  ADMIN) bulk-provision coding-agent monitoring for a whole team or device fleet.
   TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, monitor this tool,
   monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity,
   codex cli, cursor hooks, gemini cli, gemini-cli hooks, antigravity cli, antigravity, agy,
@@ -18,7 +19,8 @@ description: |
   olakai monitor list, olakai monitor doctor, olakai monitor repair, monitor
   workspace, track sessions, is my monitoring working, monitoring not working,
   no events from claude code, claude code monitoring, codex monitoring,
-  cursor monitoring, agents mine, where am i monitoring.
+  cursor monitoring, agents mine, where am i monitoring, bulk provision,
+  bulk-provision, fleet rollout, intune, provision my team, admin monitor.
   DO NOT load for: instrumenting your own agent's SDK code (use olakai-integrate),
   creating agents from scratch with custom code (use olakai-new-project),
   generic SDK / KPI / event troubleshooting unrelated to a coding tool
@@ -26,7 +28,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.0"
+  version: "1.17.0"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -39,6 +41,7 @@ This skill sets up hooks-based monitoring for **local coding agents** and teache
 |--------------|-----|
 | Monitor **the coding tool itself** (Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI sessions) | **this skill** |
 | Check / fix your **own** monitoring ("is it working?", "no events") | **this skill** → [Self-healing](#self-healing-diagnose-and-repair-your-own-monitoring) |
+| Roll out monitoring to a whole **team/fleet** as an Olakai ADMIN | **this skill** → [Admin bulk-provisioning](#admin-zero-touch-fleet-rollout-bulk-provision) |
 | Instrument **your own agent's source code** with the `@olakai/sdk` / `olakai-sdk` | `olakai-integrate` |
 | Build a brand-new agent project from scratch | `olakai-new-project` |
 | Debug SDK / KPI / event issues unrelated to a coding tool | `olakai-troubleshoot` |
@@ -53,7 +56,9 @@ Five tools are supported, all behind the same `olakai monitor` command, gated by
 | Gemini CLI | `gemini-cli` | `0.26.0` |
 | Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
-> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade with `npm install -g olakai-cli@latest`.
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Upgrade with `npm install -g olakai-cli@latest`.
+>
+> Since **olakai-cli 0.13.0**, every monitored event also reports the CLI version that produced it — no action needed, but it helps diagnose version drift across machines.
 
 **What you get:**
 - Activity tracking on the **AI Coding Apps** tab in **Coding IQ → AI Impact** — a single table with all five tools' agents, filterable by source (`All / Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI`).
@@ -158,6 +163,39 @@ Are you monitoring …
 ```
 
 You can install monitoring for **multiple tools** in the same workspace — each tool stores its config in its own settings file and creates its own agent record.
+
+## Admin: zero-touch fleet rollout (bulk-provision)
+
+`olakai monitor init` is the right path for a **single developer** setting up their own machine interactively. If you are an Olakai **ADMIN** rolling out Claude Code monitoring to a whole team — pushing configs through Intune or another device-management tool, with no action required from each developer — use bulk-provision instead (**olakai-cli ≥ 0.13.0**, ADMIN role required):
+
+```bash
+olakai admin monitor bulk-provision \
+  --emails roster.txt \
+  --out ./bundles \
+  [--tool claude-code] [--rotate-existing-keys] [--name-prefix "Prefix "] [--json] [--yes]
+```
+
+- `--emails` accepts `.txt` or `.csv` — one email per line (or first CSV column), `#` comments allowed, a header row is auto-skipped, emails are deduped case-insensitively, max 500 per run.
+- `--tool` — v1 supports `claude-code` **only**. Codex, Cursor, Gemini CLI, and Antigravity keep hooks in global per-machine files, so per-repo pushable bundles aren't possible for them.
+
+**What it does — per email in the roster:**
+1. Resolves or creates an EMPLOYEE user on your account
+2. Creates a Claude Code agent **owned by that developer** (`creatorUserId`), so Coding IQ attribution is per-developer
+3. Mints an SDK key
+4. Writes a device-management-ready bundle under `<out>/<localpart>/`: `.claude/settings.json` (hook block) and `.olakai/monitor-claude-code.json` (agentId / apiKey / monitoringEndpoint, mode 0600) — push both into the target repo/home layout. A `keymap.json` / `keymap.csv` (0600) at the out root maps emails → agents → keys.
+
+Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision` endpoint on **your own instance** (SaaS or on-prem), in chunks of 100 emails (server rate limit: 10 requests / 120s per admin).
+
+**Key semantics — read before re-running:**
+- Plaintext keys are returned **only at creation or rotation**. On a re-run, existing developers come back as `reused` with **no key and no bundle** — this is deliberate, so re-runs are safe for already-deployed devices.
+- `--rotate-existing-keys` revokes and remints keys for existing developers — this **invalidates configs already deployed** to their devices. Only use it when you intend to redeploy the fresh bundles.
+- The command exits non-zero if any row fails. If a run aborts mid-way on a rate limit, unattempted emails are written to `<out>/unprocessed.txt` — re-run with that file as the roster.
+
+**Deployment gotchas:**
+1. Target machines must also have `olakai-cli` installed globally — the pushed hooks run `olakai monitor hook ...`.
+2. Pushed bundles do **not** appear in `olakai monitor list` / `doctor` on the target machine until the developer runs any `olakai monitor` command once (the registry reconcile backfills them). The hooks fire and report fine regardless — this only affects local visibility tooling.
+
+**Prefer a UI?** The same capability exists in the dashboard: **Coding IQ → Settings → Bulk Provisioning** (paste or upload emails → download the key-map CSV + a ZIP of bundles).
 
 ## Quick Setup — Claude Code
 
@@ -565,6 +603,9 @@ olakai monitor init --tool codex                 # Codex CLI (>= 0.124.0, global
 olakai monitor init --tool cursor                # Cursor (>= 1.7, hooks beta, global hooks)
 olakai monitor init --tool gemini-cli            # Gemini CLI (>= 0.26.0, global hooks)
 olakai monitor init --tool antigravity           # Antigravity CLI (recent agy w/ hooks, validated 1.0.4, global hooks)
+
+# Admin: zero-touch fleet rollout (ADMIN role, olakai-cli >= 0.13.0, v1 claude-code only)
+olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
 
 # See what's monitored (two lenses)
 olakai monitor list                              # MACHINE: everything on this box + drift flags

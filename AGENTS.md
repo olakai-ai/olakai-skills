@@ -38,7 +38,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.4.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.17.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -452,6 +452,17 @@ olakai profile [--json]                                  # Builder Profile: arch
 
 # Local Coding Agent Monitoring (hooks-based)
 olakai monitor init --tool claude-code|codex|cursor|gemini-cli|antigravity      # Install hooks for the chosen tool
+olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
+                                                         # ADMIN, >= 0.13.0: zero-touch fleet rollout. Per roster email:
+                                                         #   resolve-or-create EMPLOYEE user, create developer-owned agent,
+                                                         #   mint SDK key, write Intune-ready bundle <out>/<localpart>/
+                                                         #   (.claude/settings.json + .olakai/monitor-claude-code.json)
+                                                         #   + keymap.json/csv at the out root. Plaintext keys ONLY at
+                                                         #   creation/rotation; re-runs return existing devs as "reused"
+                                                         #   (no key, no bundle). v1 supports --tool claude-code ONLY.
+                                                         #   Target machines still need olakai-cli installed globally;
+                                                         #   pushed bundles appear in monitor list/doctor only after any
+                                                         #   olakai monitor command runs once there (registry reconcile).
 olakai monitor status --tool claude-code|codex|cursor|gemini-cli|antigravity    # Verify hook + config installation
 olakai monitor disable --tool claude-code|codex|cursor|gemini-cli|antigravity   # Remove hooks and local config
 olakai monitor hook <event> --tool claude-code|codex|cursor|gemini-cli|antigravity  # Internal hook invoker (called by the registered hook command)
@@ -550,7 +561,7 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 
-1. Update version number (currently 1.15.0)
+1. Update version number (currently 1.17.0)
 2. Update version in all SKILL.md frontmatter metadata
 3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
 4. Update changelog if maintained
@@ -560,14 +571,14 @@ When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 The authoritative source for current published SDK/CLI versions is:
 `localnode-app/packages/config/sdk-versions.ts`
 
-**Current versions** (last updated March 2026):
+**Current versions** (last updated July 2026):
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
-- CLI: `olakai-cli` v0.2.0
+- CLI: `olakai-cli` v0.13.0
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
-> **CLI ≥ 0.7.0 required for new monitor commands.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` are documented in the monitor skills against **olakai-cli ≥ 0.7.0** (the release introducing them). This minimum was written before the CLI was published — **reconcile the exact published version** in `local-coding-agent` / `monitor-doctor` skills and here when olakai-cli actually ships these commands.
+> **CLI feature minimums.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` require **olakai-cli ≥ 0.7.0**. `olakai profile` requires **≥ 0.10.0**. `olakai admin monitor bulk-provision` requires **≥ 0.13.0** (which also added CLI version telemetry: every monitored event reports the CLI version that produced it — OLA-501).
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 
