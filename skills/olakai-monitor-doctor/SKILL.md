@@ -23,7 +23,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.0"
+  version: "1.17.0"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -86,6 +86,8 @@ olakai agents mine --source codex --json
 | 6 | `events-flowing` | Recent events exist for this agent (metadata probe) | Hooks installed but never fired → run a turn, then re-check; if still empty see the unattributed-activity caveat below |
 
 `--fix` is **idempotent and best-effort**: it adopts the registry entry, re-merges missing hooks, and re-links a rejected key. It will **not** recreate a missing agent unless you add `--recreate-missing` — a deliberate guard against a flaky/transient 404 spawning a duplicate agent.
+
+> **Admin bulk-provisioned machines (olakai-cli ≥ 0.13.0):** bundles pushed by an admin via `olakai admin monitor bulk-provision` (or the Coding IQ → Settings → Bulk Provisioning UI) write the hooks and `.olakai/monitor-claude-code.json` directly, so the workspace is **not in the local registry** until the developer runs any `olakai monitor` command once — the registry reconcile then backfills it. Hooks fire and events flow regardless. A `registry-entry` FAIL (or the workspace missing from `monitor list`) on such a machine is expected, not broken — running `olakai monitor doctor --tool claude-code --fix` adopts it.
 
 ## Decision tree
 
