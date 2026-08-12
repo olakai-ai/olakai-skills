@@ -10,6 +10,10 @@ This is a **Claude Code skills plugin** for the Olakai AI observability platform
 
 **Target Users**: AI coding assistants (Claude Code, Cursor, VS Code Copilot) helping developers with Olakai integration.
 
+### The MCP connector is the second onboarding path
+
+Olakai now exposes a remote **MCP connector** (`https://<host>/api/mcp`, OAuth) that gives an AI assistant account-scoped read/analysis access to the platform — the same jobs the CLI-read skills teach (`olakai activity`, `olakai kpis`, `olakai agents`, reports), driven in natural language. These skills therefore cross-reference it: where a skill teaches a CLI **read/analysis** flow the MCP now covers (`olakai-get-started`, `olakai-integrate`, `olakai-reports`, `olakai-troubleshoot`), it carries an "Or connect via MCP" callout pointing at https://app.olakai.ai/docs/olakai/olakai-mcp-connect. **Keep machine-local monitor guidance CLI-only** — the `olakai monitor …` flows in `olakai-monitor-local-coding-agent` / `olakai-monitor-doctor` configure hooks on *this machine*, which MCP does not do; do not add an MCP path to those skills. When you add or edit a CLI-read flow, keep the cross-reference in sync.
+
 ## Repository Structure
 
 The repository uses a **dual-directory structure** for compatibility with both the Agent Skills standard (skills.sh) and the Claude Code plugin system.

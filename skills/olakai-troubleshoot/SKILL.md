@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.0"
+  version: "1.18.0"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -28,6 +28,8 @@ This skill helps diagnose and fix common issues with Olakai AI agent monitoring,
 > **Monitoring a coding tool (Claude Code / Cursor / Codex) rather than your own SDK code?** This skill is for SDK/API issues. For a local coding agent's hooks-based monitoring (no events, deleted/404 agent, drifted config), run `olakai monitor doctor --tool <tool>` and use the **`olakai-monitor-doctor`** skill (setup lives in **`olakai-monitor-local-coding-agent`**).
 
 For full documentation, see: https://app.olakai.ai/llms.txt
+
+> **Or connect via MCP.** The fetch-and-inspect reads this skill relies on (`olakai activity list` / `olakai activity get`) are also available to your assistant through the **Olakai MCP connector** once your account is connected — handy when you want the assistant to pull an event and reason about it inline. Setup: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. Mind the split: MCP is account-scoped analysis and reads, while **machine-local coding-tool monitoring stays CLI-only** (`olakai monitor …`) — the `olakai-monitor-doctor` flows noted above are not covered by MCP.
 
 ## The Golden Rule: Test → Fetch → Validate
 

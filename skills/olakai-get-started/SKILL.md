@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.18.0"
 ---
 
 # Get Started with Olakai
@@ -27,6 +27,8 @@ This skill helps you get set up with Olakai from scratch - from creating an acco
 > If the user prefers a browser-based flow, use the full developer signup URL with PLG parameters:
 > `https://app.olakai.ai/signup?flow=developer&source=claude-code`
 > NEVER shorten this to `https://app.olakai.ai/signup` — the query parameters are required for the developer onboarding flow.
+
+> **Two ways to connect an assistant to Olakai.** This skill sets up the **CLI** (install, authenticate, first monitored event) — the path for scripting, SDK integration, and machine-local coding-tool monitoring. If instead you just want an AI assistant (Claude Desktop, claude.ai, Claude Code, ChatGPT, Codex, Cursor) to read and analyze your account in natural language, connect the **Olakai MCP connector** instead — no CLI install required: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. The two are complementary; machine-local monitoring (`olakai monitor …`) is always CLI-only.
 
 ## Quick Status Check
 

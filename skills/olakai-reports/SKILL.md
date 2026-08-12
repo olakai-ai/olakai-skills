@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.18.0"
 ---
 
 # Olakai Analytics Reports
@@ -27,6 +27,8 @@ metadata:
 This skill enables terminal-based analytics report generation using the Olakai CLI, eliminating the need to access the web UI for analytics insights.
 
 For full documentation, see: https://app.olakai.ai/llms.txt
+
+> **Or connect via MCP.** Everything this skill does from the CLI — usage summaries, KPI trends, ROI, and risk analysis — your assistant can also do directly once your account is connected through the **Olakai MCP connector**. Point any MCP-capable client (Claude Desktop, claude.ai, Claude Code, ChatGPT, Codex, Cursor) at your server URL, approve the one-time OAuth consent, and ask for the report in natural language. Setup: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. The CLI stays the right tool for scripting and piping into `jq`; MCP is the right tool when you want the assistant itself to pull and explain the numbers.
 
 ## Prerequisites
 

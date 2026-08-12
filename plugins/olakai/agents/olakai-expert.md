@@ -203,6 +203,8 @@ olakai kpis list --agent-id AGENT_ID --json | jq '.[] | select(.calculatorId == 
 olakai activity sessions --agent-id AGENT_ID
 ```
 
+> **Or validate via MCP.** These read-and-inspect commands (`olakai activity list` / `get`, `olakai kpis list`) are also available to an assistant through the **Olakai MCP connector** once the user's account is connected — the same account-scoped reads in natural language: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. The CLI stays the source of truth for scripting and for the **write** operations above (`kpis create`, `custom-data create`); machine-local `olakai monitor …` setup is CLI-only and never runs over MCP.
+
 ## Success Criteria
 
 An implementation is ONLY complete when ALL of these are verified:
