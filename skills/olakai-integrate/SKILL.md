@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.18.0"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -28,6 +28,8 @@ metadata:
 This skill guides you through adding Olakai monitoring to an existing AI agent or LLM-powered application with minimal code changes.
 
 For full SDK documentation, see: https://app.olakai.ai/llms.txt
+
+> **Or connect via MCP (for the reads, not for instrumenting).** Wrapping your code with the SDK is a CLI + SDK job and MCP does not replace it. But the **validation** step — fetching the event you just generated and inspecting its `customData` / `kpiData` — can also be done by your assistant through the **Olakai MCP connector** once your account is connected: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. Use whichever you prefer to confirm the integration worked.
 
 ## Prerequisites
 

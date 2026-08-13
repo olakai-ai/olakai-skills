@@ -10,7 +10,7 @@
       "name": "olakai",
       "description": "Olakai AI analytics and governance — create agents, add monitoring, troubleshoot issues, generate reports",
       "source": "./plugins/olakai",
-      "version": "1.17.0",
+      "version": "1.18.0",
       "category": "development",
       "tags": [
         "analytics",
