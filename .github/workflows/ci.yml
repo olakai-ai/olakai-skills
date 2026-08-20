@@ -66,6 +66,9 @@ jobs:
       - name: Validate olakai-tune-my-setup safety rules
         run: ./scripts/validate-tune-safety.sh
 
+      - name: Prove the safety validator still rejects a gutted skill
+        run: ./scripts/validate-tune-safety-selftest.sh
+
       - name: Lint markdown
         uses: DavidAnson/markdownlint-cli2-action@v19
         with:

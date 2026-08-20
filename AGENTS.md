@@ -66,6 +66,12 @@ olakai-skills/
 │   ├── skill-activator.sh        # Hook script for auto-invocation
 │   ├── README.md                 # Hook installation instructions
 │   └── settings-snippet.json     # Settings configuration to copy
+├── scripts/
+│   ├── validate.sh               # Run every CI check locally
+│   ├── validate-tune-safety.sh   # Pins olakai-tune-my-setup's safety rules (OLA-1053)
+│   ├── validate-tune-safety-selftest.sh  # Proves that validator still REJECTS
+│   └── __fixtures__/
+│       └── gutted-skill.md       # Adversarial fixture — NOT a skill, never symlinked
 ├── docs/
 │   └── publishing-guide.md       # Distribution & packaging guide
 ├── CLAUDE.md                     # This file
@@ -109,6 +115,29 @@ Each skill follows YAML frontmatter + Markdown format with:
 - `description`: Brief purpose
 - `license`: MIT
 - `metadata`: Author and version info
+
+## Safety-critical skills
+
+`olakai-tune-my-setup` is the first skill in this repo that **writes files** —
+and the files it writes are the ones that govern the agent running it
+(`CLAUDE.md`, skills, subagent definitions, hooks, permission and model config).
+Its safety properties live in prose, and prose has no type system.
+
+So they are pinned. `scripts/validate-tune-safety.sh` requires each rule heading
+and each load-bearing sentence verbatim, and separately forbids instructions
+that contradict them (after stripping negated clauses, because grep cannot tell
+a rule from its opposite). `scripts/validate-tune-safety-selftest.sh` then runs
+that validator against `scripts/__fixtures__/gutted-skill.md` and fails if it
+comes back clean.
+
+The self-test exists because the first version of the validator matched bare
+tokens, and a 25-line file with every rule stripped — ending in an instruction
+to apply edits immediately without asking — passed all of its checks. A gate
+that green-lights the file it exists to reject is worse than no gate.
+
+**If you reword a rule in that skill, update the validator in the same commit
+and run the self-test.** Loosening a pattern to make it pass is how the gate
+decays; the self-test is what catches that.
 
 ## The Golden Rule
 
