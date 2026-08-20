@@ -37,12 +37,14 @@ olakai-skills/
 │   │   └── SKILL.md              # Self-heal monitoring: list / doctor / repair (~220 lines)
 │   ├── olakai-monitor-claude-code/
 │   │   └── SKILL.md              # Redirect stub — points to olakai-monitor-local-coding-agent
-│   └── olakai-status/
-│       └── SKILL.md              # In-terminal Coding IQ status digest (invoked as /olakai)
+│   ├── olakai-status/
+│   │   └── SKILL.md              # In-terminal Coding IQ status digest (invoked as /olakai)
+│   └── olakai-tune-my-setup/
+│       └── SKILL.md              # Fluency Feedback Loop — diff report vs local config, propose edits (~380 lines)
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.17.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.19.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -56,7 +58,8 @@ olakai-skills/
 │           ├── olakai-monitor-local-coding-agent -> ../../../skills/olakai-monitor-local-coding-agent
 │           ├── olakai-monitor-doctor -> ../../../skills/olakai-monitor-doctor
 │           ├── olakai-monitor-claude-code -> ../../../skills/olakai-monitor-claude-code  (redirect stub)
-│           └── olakai-status -> ../../../skills/olakai-status
+│           ├── olakai-status -> ../../../skills/olakai-status
+│           └── olakai-tune-my-setup -> ../../../skills/olakai-tune-my-setup
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
 ├── hooks/                        # Optional skill activation hooks
@@ -99,6 +102,7 @@ olakai-skills/
 | `olakai-monitor-doctor` | ~220 | Self-heal monitoring — `olakai monitor list` / `doctor [--fix]` / `repair`, drift diagnosis, agent lifecycle |
 | `olakai-monitor-claude-code` | ~10 | Redirect stub — points to `olakai-monitor-local-coding-agent` (kept so existing references resolve) |
 | `olakai-status` | ~280 | In-terminal Coding IQ status digest — monitoring health, personal spend, budget, and Builder Profile (`olakai status` + `olakai profile`; invoked as `/olakai`) |
+| `olakai-tune-my-setup` | ~380 | The Fluency Feedback Loop's prescription leg — diffs the AI Fluency report against the developer's ACTUAL local agent config, proposes two or three lever-derived edits, shows each as a diff, applies nothing without approval, records the experiment |
 
 Each skill follows YAML frontmatter + Markdown format with:
 - `name`: Skill identifier
@@ -259,6 +263,7 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | Monitor a local coding agent (Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity, olakai monitor init, local coding agent, hooks |
 | Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor/gemini-cli/antigravity, fix monitoring, agent 404, agents mine |
 | Check personal spend, budget, and monitoring health | `olakai-status` | olakai status, my spend, my budget, am I monitored, coding iq status, personal spend, budget limit, olakai digest |
+| Change how the coding agent is configured, based on measured fluency | `olakai-tune-my-setup` | tune my setup, what should I change, improve my fluency, my growth edge, my agent ignores CLAUDE.md, setup lever, fluency experiment, did my change work |
 | Something not working (SDK / KPI / event issues) | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
@@ -453,6 +458,8 @@ olakai workflows create --name "Name"
 # Developer Coding IQ Status Digest
 olakai status [--json]                                   # Show monitoring health, spend, and budget (/olakai skill)
 olakai profile [--json]                                  # Builder Profile: archetype, dimension scores, personal ROI (>= 0.10.0, /olakai skill)
+olakai profile --setup [--json]                          # Measured coding setup: plan-mode rate, skills that fire, subagents, model mix (>= 0.14.0)
+olakai profile --recommendations [--json]                # Growth edge + setup levers RANKED against that setup (>= 0.14.0, /olakai-tune-my-setup skill)
 
 # Local Coding Agent Monitoring (hooks-based)
 olakai monitor init --tool claude-code|codex|cursor|gemini-cli|antigravity      # Install hooks for the chosen tool
@@ -582,7 +589,7 @@ The authoritative source for current published SDK/CLI versions is:
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
-> **CLI feature minimums.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` require **olakai-cli ≥ 0.7.0**. `olakai profile` requires **≥ 0.10.0**. `olakai admin monitor bulk-provision` requires **≥ 0.13.0** (which also added CLI version telemetry: every monitored event reports the CLI version that produced it — OLA-501).
+> **CLI feature minimums.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` require **olakai-cli ≥ 0.7.0**. `olakai profile` requires **≥ 0.10.0**, and its `--setup` / `--recommendations` flags require **≥ 0.14.0**. `olakai admin monitor bulk-provision` requires **≥ 0.13.0** (which also added CLI version telemetry: every monitored event reports the CLI version that produced it — OLA-501).
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 

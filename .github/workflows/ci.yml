@@ -63,6 +63,9 @@ jobs:
           done
           exit $status
 
+      - name: Validate olakai-tune-my-setup safety rules
+        run: ./scripts/validate-tune-safety.sh
+
       - name: Lint markdown
         uses: DavidAnson/markdownlint-cli2-action@v19
         with:

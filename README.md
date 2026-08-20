@@ -41,6 +41,7 @@ git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skill
 | **olakai-reports** | Generate usage summaries, KPI trends, ROI reports from the terminal |
 | **olakai-monitor-local-coding-agent** | Set up hooks-based monitoring for local coding agents — Claude Code, Codex CLI, Cursor (`olakai monitor init --tool <tool>`) |
 | **olakai-monitor-doctor** | Self-heal a coding tool's monitoring — `olakai monitor list` / `doctor [--fix]` / `repair` |
+| **olakai-tune-my-setup** | Diff your AI Fluency report against your ACTUAL local agent config, propose two or three specific changes, show each as a diff, apply only on approval |
 
 ## Bundled Agent
 
