@@ -50,6 +50,14 @@ for skill_dir in skills/*/; do
 done
 
 echo ""
+# The tune skill rewrites the files that govern the agent, so the rules that
+# keep it safe are pinned rather than trusted to survive an edit (OLA-1053).
+./scripts/validate-tune-safety.sh || status=1
+# …and the gate has a gate: prove it still rejects a file with the rules
+# stripped, so the patterns cannot drift back into matching bare tokens.
+./scripts/validate-tune-safety-selftest.sh || status=1
+
+echo ""
 echo "=== Linting markdown ==="
 if command -v npx &>/dev/null; then
   npx --yes markdownlint-cli2 "skills/**/*.md" --config .markdownlint.json && echo "  OK: no lint errors" || status=1

@@ -309,6 +309,17 @@ If `backend.found = false`, `backend.profile = null`, or a `backendError` is pre
 
 The CLI's human output (`olakai profile`, no `--json`) already renders all of this correctly; prefer `--json` only when you want to reformat into the conversation.
 
+### When they ask what to DO about it
+
+This skill reports. It does not change anything.
+
+If the user asks what they should change, why a dimension is low, or why their
+agent ignores an instruction they wrote, hand off to **`olakai-tune-my-setup`**.
+That skill reads this same report next to their ACTUAL local config —
+`CLAUDE.md`, skills, subagents, hooks, model settings — names the gap, and
+proposes two or three specific edits, each shown as a diff and applied only on
+approval. Do not attempt that here.
+
 ---
 
 ## Graceful degradation
