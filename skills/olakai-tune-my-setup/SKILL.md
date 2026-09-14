@@ -124,8 +124,11 @@ You may propose edits only to these paths, and to no others:
 
 **Refuse anything else.** No path containing `..`, no path resolving outside those roots, no symlink you have not resolved, no `.env`, no credential file, no CI config, no application source code. If a lever seems to call for one, the lever is being misapplied — say so rather than stretching the boundary.
 
-Three limits on **what may be written into** those files, because bounding the path is not enough:
+`.claude/settings.local.json` is on that list because you must **read** it: Claude Code merges the `hooks` block across it and `.claude/settings.json`, so hooks are only half-visible without it. Reading it is not a licence to rearrange it.
 
+Four limits on **what may be written into** those files, because bounding the path is not enough:
+
+- **Never touch the Olakai monitoring hooks.** The `Stop` and `SubagentStop` entries whose command runs `olakai monitor hook ...` belong to `olakai monitor`, not to any lever in this catalog. They normally sit in `.claude/settings.local.json`. Do not edit them, move them, reorder them, or remove them, and never propose a lever that writes over them. If monitoring looks wrong, that is the `olakai-monitor-doctor` skill's job, not this one.
 - **A `permissions` edit may only NARROW.** Never add an allow entry, never remove or weaken a deny entry, never widen a matcher. Adding an allow rule removes future approval prompts — that is this skill proposing to disable the control that governs it, and no amount of approval on one edit makes the next hundred safe.
 - **Never write or modify an MCP server definition**, under any surface. That means `mcpServers`, `enabledMcpjsonServers`, `mcp_servers`, and any equivalent key in another tool's config. No lever in the catalog needs one. A request to add one is out of scope even if the user asks.
 - **A hook command must be local, already-present, and inert.** It may only invoke a command that already exists in the project (a script in `package.json`, a Makefile target, a checked-in binary) or a standard local tool. It must not fetch remote content, must not pipe anything into a shell, and must not send data anywhere. If the lever's practice needs a command that does not exist yet, say so and stop — writing the command is a separate, visible piece of work, not part of a hook edit.
@@ -289,13 +292,11 @@ Where each surface lands, **for Claude Code**. For Codex, Cursor, Gemini CLI or 
 | `instructions` | `CLAUDE.md` / `AGENTS.md` (project or user level) |
 | `skill` | a new file under `.claude/skills/<name>/SKILL.md` |
 | `subagent` | a new file under `.claude/agents/<name>.md` |
-| `hook` | the `hooks` block in `.claude/settings.json` |
-| `model` | the model / effort settings in `.claude/settings.json`, or per-subagent frontmatter |
-| `permission` | the `permissions` block in `.claude/settings.json` |
+| `hook` | the `hooks` block in `.claude/settings.json`. **First read `.claude/settings.local.json` for the same hook.** Claude Code MERGES the `hooks` block across the two files, so a hook in both fires TWICE. If it is already there, the lever is already applied: say so and propose something else. |
+| `model` | the model / effort settings in `.claude/settings.json`, or per-subagent frontmatter. **First read `.claude/settings.local.json` for the same key.** Non-hook keys do not merge: the local file takes precedence, so a value you add to `settings.json` is INERT on that machine while the local one stands. Never report it as applied. |
+| `permission` | the `permissions` block in `.claude/settings.json`. Same precedence: **read `.claude/settings.local.json` first**, because a local block overrides rather than merges with the one you edit. |
 
-A lever lands in `.claude/settings.json` because the practice is meant to apply to everyone on the project. Before you propose a `hook`, check `.claude/settings.local.json` for the same hook: Claude Code merges the `hooks` block across both files, so proposing one that already exists there makes it fire twice. Propose the lever in `.claude/settings.local.json` instead when the user says the change is for them alone.
-
-Do not propose edits to the Olakai monitoring hooks (`Stop` / `SubagentStop` running `olakai monitor hook ...`). They are not setup levers. `olakai monitor` owns them.
+Reading both files is not optional for any of these three rows. Step 3 told you to build the inventory from both; use that inventory here rather than assuming `settings.json` is the whole picture.
 
 Then **stop and ask**. Do not write anything yet.
 

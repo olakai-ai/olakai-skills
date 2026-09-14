@@ -28,7 +28,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.0"
+  version: "1.20.0"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -56,9 +56,11 @@ Five tools are supported, all behind the same `olakai monitor` command, gated by
 | Gemini CLI | `gemini-cli` | `0.26.0` |
 | Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
-> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). Upgrade with `npm install -g olakai-cli@latest`, and confirm with `olakai --version`.
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). Upgrade with `npm install -g olakai-cli@latest`.
 >
 > Since **olakai-cli 0.13.0**, every monitored event also reports the CLI version that produced it — no action needed, but it helps diagnose version drift across machines.
+
+> ⚠️ **Check your CLI version before migrating hooks.** **Check that `olakai --version` reports 0.14.0 or later before running any hook-migration command in this skill.** On **0.13.0 and earlier**, `doctor --fix` re-adds the hooks to `.claude/settings.json` and reports success, so a green result there does **not** mean the hooks are safe from a `git pull`. Do not treat `npm install -g olakai-cli@latest` as proof you are on 0.14.0: run `olakai --version` and read the number. If it is below 0.14.0, say so and stop, rather than reporting a migration that did not happen.
 
 **What you get:**
 - Activity tracking on the **AI Coding Apps** tab in **Coding IQ → AI Impact** — a single table with all five tools' agents, filterable by source (`All / Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI`).
@@ -112,7 +114,7 @@ Up to **0.13.0** the hooks went into `.claude/settings.json`. Teams commonly tra
 
 What this means in practice:
 
-- **Upgrading from 0.13.0 or earlier?** Your hooks are still in `.claude/settings.json`. Run `olakai monitor doctor --tool claude-code --fix` (or `olakai monitor repair --tool claude-code`) to migrate them. `olakai monitor init --tool claude-code` migrates them too.
+- **Upgrading from 0.13.0 or earlier?** Your hooks are still in `.claude/settings.json`. Confirm `olakai --version` reports 0.14.0 or later (see the version guard above), then run `olakai monitor doctor --tool claude-code --fix` (or `olakai monitor repair --tool claude-code`) to migrate them. `olakai monitor init --tool claude-code` migrates them too. On 0.13.0 the same `--fix` puts the hooks back into `.claude/settings.json` and reports success.
 - **Never keep a hook block in both files.** Claude Code merges the `hooks` block across `settings.json` and `settings.local.json` rather than letting one override the other. A block in both fires the hooks twice and double-reports every event. This is why `init` **migrates** the legacy block instead of adding a second one.
 - **A `settings.json` with no Olakai hooks is left byte-identical.** `init`, `status` and `disable` do not rewrite it. Running the CLI never dirties your team's tracked settings file.
 - **The gitignore guarantee is verified, not assumed.** `init` and `doctor` run `git check-ignore` on the hook file and warn when it is not ignored. They stay silent when the workspace is not a git repository or git is unavailable. Note that `git check-ignore` reports a **tracked** file as not-ignored even when a rule matches it, which is exactly the state you want to hear about: add the file to `.gitignore` **and** `git rm --cached` it.
@@ -197,7 +199,9 @@ olakai admin monitor bulk-provision \
 3. Mints an SDK key
 4. Writes a device-management-ready bundle under `<out>/<localpart>/`: `.claude/settings.local.json` (hook block, **≥ 0.14.0**; bundles from 0.13.0 carried `.claude/settings.json`) and `.olakai/monitor-claude-code.json` (agentId / apiKey / monitoringEndpoint, mode 0600) — push both into the target repo/home layout. A `keymap.json` / `keymap.csv` (0600) at the out root maps emails → agents → keys.
 
-> **Why `settings.local.json` in the bundle matters at rollout scale.** The bundle is pushed onto developer machines by device management. A bundled `.claude/settings.json` **replaces** whatever the team tracks in git on each machine it lands on. `settings.local.json` is personal and gitignored, so the push adds the hooks without touching the team's tracked file. If you already rolled out 0.13.0 bundles, re-run bulk-provision on 0.14.0 and push the new bundles, or have each developer run `olakai monitor doctor --tool claude-code --fix`.
+> **Why `settings.local.json` in the bundle matters at rollout scale.** The bundle is pushed onto developer machines by device management, and how the bundled file meets an existing file on disk is the MDM tool's behaviour, not the CLI's. Most push mechanisms overwrite, so a bundled `.claude/settings.json` can replace whatever the team tracks in git on each machine it lands on. Check what your own tool does. `settings.local.json` sidesteps the question: it is personal and gitignored, so the push adds the hooks without landing on the team's tracked file at all.
+>
+> **Already rolled out 0.13.0 bundles?** Confirm your admin machine is on 0.14.0 (`olakai --version`), re-run bulk-provision, and push the new bundles. Alternatively, have each developer confirm **their own** `olakai --version` is 0.14.0 or later and then run `olakai monitor doctor --tool claude-code --fix`. A developer still on 0.13.0 gets a green `--fix` that leaves the hooks in `.claude/settings.json`, so the fleet-wide report would say migrated when it is not. See the version guard above.
 
 Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision` endpoint on **your own instance** (SaaS or on-prem), in chunks of 100 emails (server rate limit: 10 requests / 120s per admin).
 
@@ -225,9 +229,16 @@ olakai monitor init --tool claude-code
 2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.local.json` (**workspace-scoped**, **≥ 0.14.0**). If a legacy Olakai hook block is still in `.claude/settings.json`, `init` **migrates** it: the block moves to `settings.local.json` and `init` tells you it did so. A `settings.json` that holds no Olakai hooks is left byte-identical.
 3. Saves configuration to `.olakai/monitor-claude-code.json` (API key, agent ID, endpoint). Pre-Stage-2 installs at `.claude/olakai-monitor.json` are auto-migrated on first read.
 4. Records this workspace in the machine registry (`~/.olakai/registry.json`) so `monitor list` / `doctor` can see it.
-5. Checks the hook file against `git check-ignore` and warns if it is not gitignored (silent outside a git repository).
+5. Checks the hook file against `git check-ignore` and warns if it is not gitignored (silent when the workspace is not a git repository, or when git is unavailable).
 
-**Your API key is protected against a failed install.** Picking an existing agent rotates its key, and a plaintext key is shown only once. So `init` parses the settings files **before** it provisions, and writes `.olakai/monitor-claude-code.json` **before** it writes the hooks. A settings file that will not parse stops the run before any key is rotated, and a rotated key is on disk before the hook write is attempted.
+**`init` links an agent in one of two ways, and only one of them rotates a key.** Know which one you are in before you report anything to the developer:
+
+| Path | What happens to the key | Blast radius |
+|---|---|---|
+| **Reuse an existing agent** (pick it from the list) | Provisioning **rotates** that agent's API key | Any **other** workspace already using that agent starts failing on its next monitor request until it re-runs `olakai monitor init`. The CLI warns you about this before it proceeds. |
+| **Paste a key** you already hold | No rotation | The CLI calls `GET /api/monitoring/prompt/me` with the pasted key and aborts (default `n`) if the resolved agent does not match the agent you picked |
+
+**Your API key is protected against a failed install.** On the rotate path the plaintext key is shown only once, so `init` parses the settings files **before** it provisions, and writes `.olakai/monitor-claude-code.json` **before** it writes the hooks. A settings file that will not parse stops the run before any key is rotated, and a rotated key is on disk before the hook write is attempted.
 
 The command is interactive — it prompts for an agent name if one is not provided, and lets you pick an existing agent or create a new one.
 

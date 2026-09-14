@@ -44,7 +44,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.19.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.20.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -523,8 +523,12 @@ olakai monitor repair --tool <t>                         # Forceful re-init pres
                                                          #   only if invalid, recreates agent only on a true 404.
 # OLAKAI_MONITOR_DEBUG=1 enables dispatcher/posting, dispatcher/posted (status + 500-byte response preview),
 # and dispatcher/post-error events at /tmp/olakai-monitor-debug-<pid>.log.
-# When picking an existing agent during init, the CLI calls GET /api/monitoring/prompt/me with the
-# pasted key and aborts (default n) if the resolved agent doesn't match the picked one.
+# init links an agent in one of TWO ways, and only one of them rotates a key. Keep them distinct:
+#   PASTE A KEY you already hold: the CLI calls GET /api/monitoring/prompt/me with the pasted key and
+#     aborts (default n) if the resolved agent doesn't match the agent you picked. Nothing is rotated.
+#   REUSE AN EXISTING AGENT: provisioning ROTATES that agent's API key. Any OTHER workspace already
+#     using that agent starts failing on its next monitor request until it re-runs `olakai monitor init`.
+#     The CLI warns before it proceeds.
 # Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.local.json,
 # olakai-cli >= 0.14.0; 0.13.0 and earlier wrote .claude/settings.json). settings.local.json is the project-scoped
 # personal settings file and is conventionally gitignored, so a teammate's commit cannot delete the hooks.
@@ -533,8 +537,12 @@ olakai monitor repair --tool <t>                         # Forceful re-init pres
 # a legacy-only or duplicated install as a fixable warn; `doctor --fix` and `repair` migrate it. A settings.json with
 # no Olakai hooks is left byte-identical by init, status and disable. `status` reports hooks found in either file,
 # names the file, and warns when they are in both. init and doctor also VERIFY the gitignore guarantee with
-# `git check-ignore` and warn when the hook file is not ignored (they stay silent outside a repo). Note check-ignore
-# reports not-ignored for a TRACKED file even when a rule matches, which is exactly that broken state.
+# `git check-ignore` and warn when the hook file is not ignored (they stay silent when the workspace is not a git
+# repo, or when git is unavailable). Note check-ignore reports not-ignored for a TRACKED file even when a rule
+# matches, which is exactly that broken state.
+# BEFORE recommending a hook migration, confirm `olakai --version` reports 0.14.0 or later. On 0.13.0 and earlier
+# `doctor --fix` re-adds the hooks to .claude/settings.json and reports SUCCESS, so a green result there does not
+# mean the hooks survive a `git pull`. Never treat `npm i -g olakai-cli@latest` as proof of the version.
 # Codex, Cursor, Gemini CLI, and Antigravity install hooks GLOBALLY (~/.codex/config.toml, ~/.cursor/hooks.json,
 # ~/.gemini/settings.json, ~/.gemini/config/hooks.json). Per-workspace agent linkage for all five lives in
 # .olakai/monitor-<tool>.json. Note Antigravity (~/.gemini/config/hooks.json) is a different file from
@@ -611,7 +619,7 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
 
-1. Update version number (currently 1.17.0)
+1. Update version number (currently 1.20.0)
 2. Update version in all SKILL.md frontmatter metadata
 3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
 4. Update changelog if maintained
