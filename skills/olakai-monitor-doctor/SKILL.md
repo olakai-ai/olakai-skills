@@ -23,7 +23,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.17.0"
+  version: "1.20.0"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -33,6 +33,16 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
 > **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest`.
+
+## Check your CLI version before migrating
+
+> ⚠️ **Read this before you run any hook-migration command in this skill.**
+>
+> **Check that `olakai --version` reports 0.14.0 or later before running the migration commands.** On **0.13.0 and earlier**, `doctor --fix` re-adds the hooks to `.claude/settings.json` and reports success, so a green result there does **not** mean the hooks are safe from a `git pull`.
+>
+> Do not treat `npm install -g olakai-cli@latest` as proof you are on 0.14.0. Run `olakai --version` and read the number. If it is below 0.14.0, say so and stop, rather than reporting a migration that did not happen.
+
+See [Claude Code hook location](#what-each-doctor-check-means) for what changed and why.
 
 ## The three commands, in order
 
@@ -87,6 +97,13 @@ olakai agents mine --source codex --json
 
 `--fix` is **idempotent and best-effort**: it adopts the registry entry, re-merges missing hooks, and re-links a rejected key. It will **not** recreate a missing agent unless you add `--recreate-missing` — a deliberate guard against a flaky/transient 404 spawning a duplicate agent.
 
+> **Claude Code hook location (olakai-cli ≥ 0.14.0).** `hooks-installed` passing is no longer the whole story for Claude Code. Since 0.14.0 the hooks belong in `.claude/settings.local.json`. Doctor reports two extra conditions as a **`warn`** rather than a green check:
+>
+> 1. **Hooks in the legacy `.claude/settings.json`, or in both files.** Claude Code merges the `hooks` block across both files: neither suppresses the other, and identical handlers are deduplicated, so the CLI's own block left in both runs **once**. The warning is about an unfinished migration, not duplicate events. It matters because the copy in the tracked `settings.json` is one `git pull` away from deletion, and because two blocks that differ (an older command form beside the current one) both run and do duplicate events. `doctor --fix` and `monitor repair` migrate the block to `settings.local.json`.
+> 2. **The hook file is not gitignored.** Doctor runs `git check-ignore` on it and warns when the file is committable, because a teammate's commit could then delete your hooks. It stays silent when the workspace is not a git repository or git is unavailable. Note `git check-ignore` reports a **tracked** file as not-ignored even when a `.gitignore` rule matches it. That is exactly the broken case: add the rule **and** run `git rm --cached` on the file.
+>
+> Before 0.14.0, doctor reported a legacy install as `ok` rather than `warn`, because `.claude/settings.json` was then the correct location. Upgrade, confirm with `olakai --version`, and re-run `olakai monitor doctor --tool claude-code`.
+
 > **Admin bulk-provisioned machines (olakai-cli ≥ 0.13.0):** bundles pushed by an admin via `olakai admin monitor bulk-provision` (or the Coding IQ → Settings → Bulk Provisioning UI) write the hooks and `.olakai/monitor-claude-code.json` directly, so the workspace is **not in the local registry** until the developer runs any `olakai monitor` command once — the registry reconcile then backfills it. Hooks fire and events flow regardless. A `registry-entry` FAIL (or the workspace missing from `monitor list`) on such a machine is expected, not broken — running `olakai monitor doctor --tool claude-code --fix` adopts it.
 
 ## Decision tree
@@ -106,6 +123,12 @@ No events appearing?
     └── events-flowing FAIL  → run one turn, re-check; Codex/Cursor in an un-inited repo
                                → silent-exit (see unattributed-activity caveat)
 
+Doctor warns about the hook location (Claude Code)?
+└── olakai --version   → MUST be >= 0.14.0 first. On 0.13.0, --fix puts the hooks
+    │                    BACK into .claude/settings.json and reports success.
+    └── olakai monitor doctor --tool claude-code --fix
+        (migrates the legacy block from .claude/settings.json to .claude/settings.local.json)
+
 Config clobbered / settings file edited by hand / legacy layout?
 └── olakai monitor repair --tool <tool>
     (always re-merges hooks, migrates legacy config, re-links key only if invalid,
@@ -118,6 +141,7 @@ Config clobbered / settings file edited by hand / legacy layout?
 |---|------------------------|------------------------------|
 | Intent | Surgical: fix only what a check flagged | Forceful re-init that **preserves** agent linkage |
 | Hooks | Re-merges only if `hooks-installed` failed | **Always** re-merges (heals a clobbered settings file) |
+| Legacy hook location (Claude Code, ≥ 0.14.0) | Migrates a `.claude/settings.json` block to `.claude/settings.local.json` | Same |
 | Legacy config | — | Migrates legacy config layout |
 | API key | Re-links only if invalid | Re-links only if invalid |
 | Missing agent | Recreates only with `--recreate-missing` | Recreates only on a **true 404** |
@@ -129,11 +153,13 @@ Where the hooks live differs by tool, and that drives what gets attributed:
 
 | Tool | Hook scope | Where hooks are written |
 |------|-----------|-------------------------|
-| Claude Code | **Workspace** | `.claude/settings.json` (this workspace only) |
+| Claude Code | **Workspace** | `.claude/settings.local.json` (this workspace only, **olakai-cli ≥ 0.14.0**) |
 | Codex CLI | **Global** | `~/.codex/config.toml` (all workspaces) |
 | Cursor | **Global** | `~/.cursor/hooks.json` (all workspaces) |
 
 For all three, the per-workspace `.olakai/monitor-<tool>.json` holds the agent linkage (key + agent ID + endpoint).
+
+Up to **0.13.0**, Claude Code hooks went into `.claude/settings.json`. Teams track that file in git, so a pull could rewrite it and silently delete the hooks. Since **0.14.0** they live in `.claude/settings.local.json`, which is project-scoped and conventionally gitignored. Doctor finds hooks in either file; see [Claude Code hook location](#what-each-doctor-check-means) for what it does about a legacy or duplicated install, and [Check your CLI version before migrating](#check-your-cli-version-before-migrating) before you act on it.
 
 > ⚠️ **Unattributed-activity caveat (Codex / Cursor).** Because Codex and Cursor hooks are **global**, they fire in *every* workspace — including ones you never ran `init` in. When the hook fires in a workspace with **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor activity from a repo and see none, the most common cause is you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an in-context explanation.
 >
@@ -164,6 +190,40 @@ olakai monitor doctor --tool <tool> --fix --recreate-missing
 olakai monitor repair --tool cursor     # re-merges hook entries, preserves the agent
 cursor --version                        # confirm >= 1.7
 ```
+
+### "My Claude Code hooks disappeared after a git pull"
+
+Hooks installed by olakai-cli **0.13.0 or earlier** sit in `.claude/settings.json`, which most teams track in git. A pull that rewrites that file deletes them, and monitoring stops with no error.
+
+```bash
+npm install -g olakai-cli@latest
+olakai --version                                 # MUST report 0.14.0 or later; see the guard above
+olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
+```
+
+**The version check is not optional here.** See [Check your CLI version before migrating](#check-your-cli-version-before-migrating). On 0.13.0 the same `--fix` puts the hooks back into `.claude/settings.json` and reports success, which recreates the exact problem you are fixing.
+
+`settings.local.json` is project-scoped and conventionally gitignored, so a pull cannot reach it. Doctor also warns if that file is not actually gitignored in your repo.
+
+### "Doctor says my hooks are in both settings files"
+
+**Do not tell the user their events are being double-counted.** Claude Code merges the `hooks` block across `.claude/settings.json` and `.claude/settings.local.json`, and neither file suppresses the other, but identical handlers are deduplicated. The CLI writes a deterministic block, so the same block in both files runs **once**.
+
+Two things still make this worth fixing:
+
+1. The copy in the tracked `settings.json` can be deleted by a `git pull`, which is the whole reason for the move.
+2. Blocks that **differ** both run. If one file carries an older command form and the other the current one, every turn really does report twice.
+
+So check whether the two blocks are identical before you say anything about duplicate events, and fix it either way:
+
+```bash
+olakai --version                                 # MUST report 0.14.0 or later; see the guard above
+olakai monitor doctor --tool claude-code --fix   # or: olakai monitor repair --tool claude-code
+```
+
+### "Every Claude Code turn really is reported twice"
+
+Confirm it against the data before you act: `olakai activity list --limit 10 --json` and look for paired events on one `chatId`. If the duplicates are real, the usual cause is **two hook handlers that differ**, not two that match. Compare the `hooks` block in both settings files, look for an Olakai handler installed by something other than `olakai monitor init`, then run the `--fix` above to leave a single current block in `settings.local.json`.
 
 ### "I edited my settings file by hand and broke it"
 

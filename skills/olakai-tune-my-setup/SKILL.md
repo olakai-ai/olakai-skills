@@ -24,7 +24,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Tune My Setup
@@ -116,7 +116,7 @@ You may propose edits only to these paths, and to no others:
 
 | Tool | Instructions | Skills / agents | Settings |
 |---|---|---|---|
-| Claude Code | `./CLAUDE.md`, `~/.claude/CLAUDE.md` | `.claude/skills/`, `.claude/agents/` (and the `~/.claude/` equivalents) | `.claude/settings.json`, `~/.claude/settings.json` |
+| Claude Code | `./CLAUDE.md`, `~/.claude/CLAUDE.md` | `.claude/skills/`, `.claude/agents/` (and the `~/.claude/` equivalents) | `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude/settings.json` |
 | Codex CLI | `./AGENTS.md`, `~/.codex/AGENTS.md` | — | `~/.codex/config.toml` |
 | Cursor | `./AGENTS.md`, `.cursor/rules/` | — | `.cursor/hooks.json` |
 | Gemini CLI | `./GEMINI.md`, `~/.gemini/GEMINI.md` | — | `~/.gemini/settings.json` |
@@ -124,8 +124,11 @@ You may propose edits only to these paths, and to no others:
 
 **Refuse anything else.** No path containing `..`, no path resolving outside those roots, no symlink you have not resolved, no `.env`, no credential file, no CI config, no application source code. If a lever seems to call for one, the lever is being misapplied — say so rather than stretching the boundary.
 
-Three limits on **what may be written into** those files, because bounding the path is not enough:
+`.claude/settings.local.json` is on that list because you must **read** it: Claude Code merges the `hooks` block across it and `.claude/settings.json`, so hooks are only half-visible without it. Reading it is not a licence to rearrange it.
 
+Four limits on **what may be written into** those files, because bounding the path is not enough:
+
+- **Never touch the Olakai monitoring hooks.** The `Stop` and `SubagentStop` entries whose command runs `olakai monitor hook ...` belong to `olakai monitor`, not to any lever in this catalog. They normally sit in `.claude/settings.local.json`. Do not edit them, move them, reorder them, or remove them, and never propose a lever that writes over them or adds a **variant** of them. A variant is the harmful case: hook handlers that differ both run, so a near-copy of the monitoring hook makes every turn report twice. If monitoring looks wrong, that is the `olakai-monitor-doctor` skill's job, not this one.
 - **A `permissions` edit may only NARROW.** Never add an allow entry, never remove or weaken a deny entry, never widen a matcher. Adding an allow rule removes future approval prompts — that is this skill proposing to disable the control that governs it, and no amount of approval on one edit makes the next hundred safe.
 - **Never write or modify an MCP server definition**, under any surface. That means `mcpServers`, `enabledMcpjsonServers`, `mcp_servers`, and any equivalent key in another tool's config. No lever in the catalog needs one. A request to add one is out of scope even if the user asks.
 - **A hook command must be local, already-present, and inert.** It may only invoke a command that already exists in the project (a script in `package.json`, a Makefile target, a checked-in binary) or a standard local tool. It must not fetch remote content, must not pipe anything into a shell, and must not send data anywhere. If the lever's practice needs a command that does not exist yet, say so and stop — writing the command is a separate, visible piece of work, not part of a hook edit.
@@ -233,18 +236,23 @@ ls CLAUDE.md AGENTS.md .cursorrules GEMINI.md 2>/dev/null
 ls -la .claude/ 2>/dev/null
 ls .claude/skills/ .claude/agents/ 2>/dev/null
 
+# Project-level settings: read BOTH. Claude Code merges them.
+ls .claude/settings.json .claude/settings.local.json 2>/dev/null
+
 # User-level config
 ls ~/.claude/CLAUDE.md ~/.claude/skills/ ~/.claude/agents/ ~/.claude/settings.json 2>/dev/null
 ```
 
-Then read the relevant ones. Focus on the growth edge's surface — if the growth edge is `verification`, read what the instruction file says about testing, review and gates, and read the hooks in `settings.json`. Do not read the entire tree.
+**Claude Code has two project settings files, and hooks can be in either.** `.claude/settings.json` is the tracked team file. `.claude/settings.local.json` is the personal, conventionally gitignored one, and it is where `olakai monitor init` puts the monitoring hooks on olakai-cli **≥ 0.14.0**. Claude Code **merges** the `hooks` block across both files rather than letting one override the other. Read both before you conclude anything about hooks. A hook you judge "missing" from `settings.json` may be running from `settings.local.json`.
+
+Then read the relevant ones. Focus on the growth edge's surface — if the growth edge is `verification`, read what the instruction file says about testing, review and gates, and read the hooks in **both** project settings files. Do not read the entire tree.
 
 Build a short inventory of what is **declared**:
 
 - What does the instruction file mandate? Quote the specific lines.
 - Which skills exist? (Note: existing ≠ firing. The setup signals say which actually fired.)
 - Which subagents are defined, and with what tools?
-- What hooks are configured, on which events?
+- What hooks are configured, on which events, and in **which** of the two project settings files?
 - What model / reasoning-effort configuration is set?
 
 ---
@@ -284,9 +292,11 @@ Where each surface lands, **for Claude Code**. For Codex, Cursor, Gemini CLI or 
 | `instructions` | `CLAUDE.md` / `AGENTS.md` (project or user level) |
 | `skill` | a new file under `.claude/skills/<name>/SKILL.md` |
 | `subagent` | a new file under `.claude/agents/<name>.md` |
-| `hook` | the `hooks` block in `.claude/settings.json` |
-| `model` | the model / effort settings in `.claude/settings.json`, or per-subagent frontmatter |
-| `permission` | the `permissions` block in `.claude/settings.json` |
+| `hook` | the `hooks` block in `.claude/settings.json`. **First read `.claude/settings.local.json` for the same hook.** Claude Code MERGES the `hooks` block across the two files, so a hook already running from the local file is already applied: say so and propose something else rather than adding a confusing duplicate. Never propose a **variant** of a hook that is already there. Handlers that differ BOTH run, so a near-copy of an existing hook gives the developer two runs of almost the same thing. |
+| `model` | the model / effort settings in `.claude/settings.json`, or per-subagent frontmatter. **First read `.claude/settings.local.json` for the same key.** Non-hook keys do not merge: the local file takes precedence, so a value you add to `settings.json` is INERT on that machine while the local one stands. Never report it as applied. |
+| `permission` | the `permissions` block in `.claude/settings.json`. Same precedence: **read `.claude/settings.local.json` first**, because a local block overrides rather than merges with the one you edit. |
+
+Reading both files is not optional for any of these three rows. Step 3 told you to build the inventory from both; use that inventory here rather than assuming `settings.json` is the whole picture.
 
 Then **stop and ask**. Do not write anything yet.
 
@@ -335,7 +345,7 @@ If you are on the CLI transport, you cannot record. Say so: tell the user what y
 You: /olakai-tune-my-setup
 
 [reads get_my_ai_fluency, get_my_coding_setup_signals, get_my_fluency_recommendations]
-[reads CLAUDE.md, .claude/settings.json, .claude/agents/]
+[reads CLAUDE.md, .claude/settings.json, .claude/settings.local.json, .claude/agents/]
 
 Your growth edge is **verification** (4.2/10 across 6 scored episodes). Olakai
 points that at the "Trust but verify" pattern.
