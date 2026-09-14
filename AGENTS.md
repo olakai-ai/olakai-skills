@@ -532,10 +532,13 @@ olakai monitor repair --tool <t>                         # Forceful re-init pres
 # Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.local.json,
 # olakai-cli >= 0.14.0; 0.13.0 and earlier wrote .claude/settings.json). settings.local.json is the project-scoped
 # personal settings file and is conventionally gitignored, so a teammate's commit cannot delete the hooks.
-# `init` MIGRATES a legacy block out of .claude/settings.json instead of adding a second one: Claude Code merges the
-# hooks block across both files, so a block in both fires the hook twice and double-reports events. `doctor` reports
-# a legacy-only or duplicated install as a fixable warn; `doctor --fix` and `repair` migrate it. A settings.json with
-# no Olakai hooks is left byte-identical by init, status and disable. `status` reports hooks found in either file,
+# `init` MIGRATES a legacy block out of .claude/settings.json instead of adding a second one. Claude Code merges the
+# hooks block across both files (neither suppresses the other) and DEDUPLICATES identical handlers, so the CLI's own
+# block left in both files runs ONCE: do NOT tell a user their events are double-counted. Blocks that DIFFER both run
+# and do duplicate events. The reason to migrate is that a block in the tracked settings.json is one `git pull` from
+# deletion. `doctor` reports a legacy-only or duplicated install as a fixable warn; `doctor --fix` and `repair` migrate
+# it. A settings.json with no Olakai hooks is left byte-identical by init, status and disable.
+# `status` reports hooks found in either file,
 # names the file, and warns when they are in both. init and doctor also VERIFY the gitignore guarantee with
 # `git check-ignore` and warn when the hook file is not ignored (they stay silent when the workspace is not a git
 # repo, or when git is unavailable). Note check-ignore reports not-ignored for a TRACKED file even when a rule
@@ -604,6 +607,14 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 3. Create symlink: `ln -s ../../../skills/new-skill-name plugins/olakai/skills/new-skill-name`
 4. Follow existing skill structure
 5. Update this CLAUDE.md if skill references new CLI/SDK patterns
+
+### Never ship an Olakai monitoring hook from this repo
+
+> ⚠️ **Do not add a `Stop` / `SubagentStop` handler that runs `olakai monitor hook ...` to this plugin, to a skill, or to `hooks/`.** `olakai monitor init` owns those hooks and writes them to `.claude/settings.local.json`.
+>
+> This is not a style rule. Claude Code deduplicates identical hook handlers **within** the settings files, so the CLI's own block appearing in two settings files still runs once. A handler delivered by a **plugin or skill** is documented as staying separate and is **not** deduplicated against a settings-file copy. Ship one here and it runs alongside the developer's `settings.local.json` copy even when byte-identical, so every turn reports twice and their Coding IQ numbers double.
+>
+> **Status as of this commit: nothing in this repo does this.** `plugin.json` declares no `hooks` key, there is no `hooks.json` anywhere, and the opt-in `hooks/` directory at the repo root is an unrelated user-global `UserPromptSubmit` skill-activator that the developer pastes into `~/.claude/settings.json` themselves. It runs `skill-activator.sh`, sends no events, and is not a monitoring hook. Keep it that way. If monitoring needs a new hook, it belongs in `olakai-cli`, not here.
 
 ### Modifying Existing Skills
 

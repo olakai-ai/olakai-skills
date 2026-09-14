@@ -99,7 +99,7 @@ olakai agents mine --source codex --json
 
 > **Claude Code hook location (olakai-cli ≥ 0.14.0).** `hooks-installed` passing is no longer the whole story for Claude Code. Since 0.14.0 the hooks belong in `.claude/settings.local.json`. Doctor reports two extra conditions as a **`warn`** rather than a green check:
 >
-> 1. **Hooks in the legacy `.claude/settings.json`, or in both files.** Claude Code merges the `hooks` block across both files, so a block in both fires every hook twice and double-reports events. `doctor --fix` and `monitor repair` migrate the block to `settings.local.json`.
+> 1. **Hooks in the legacy `.claude/settings.json`, or in both files.** Claude Code merges the `hooks` block across both files: neither suppresses the other, and identical handlers are deduplicated, so the CLI's own block left in both runs **once**. The warning is about an unfinished migration, not duplicate events. It matters because the copy in the tracked `settings.json` is one `git pull` away from deletion, and because two blocks that differ (an older command form beside the current one) both run and do duplicate events. `doctor --fix` and `monitor repair` migrate the block to `settings.local.json`.
 > 2. **The hook file is not gitignored.** Doctor runs `git check-ignore` on it and warns when the file is committable, because a teammate's commit could then delete your hooks. It stays silent when the workspace is not a git repository or git is unavailable. Note `git check-ignore` reports a **tracked** file as not-ignored even when a `.gitignore` rule matches it. That is exactly the broken case: add the rule **and** run `git rm --cached` on the file.
 >
 > Before 0.14.0, doctor reported a legacy install as `ok` rather than `warn`, because `.claude/settings.json` was then the correct location. Upgrade, confirm with `olakai --version`, and re-run `olakai monitor doctor --tool claude-code`.
@@ -205,14 +205,25 @@ olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude
 
 `settings.local.json` is project-scoped and conventionally gitignored, so a pull cannot reach it. Doctor also warns if that file is not actually gitignored in your repo.
 
-### "Every Claude Code turn is reported twice"
+### "Doctor says my hooks are in both settings files"
 
-You have an Olakai hook block in **both** `.claude/settings.json` and `.claude/settings.local.json`. Claude Code merges the `hooks` block across the two files instead of letting one override the other, so both blocks fire.
+**Do not tell the user their events are being double-counted.** Claude Code merges the `hooks` block across `.claude/settings.json` and `.claude/settings.local.json`, and neither file suppresses the other, but identical handlers are deduplicated. The CLI writes a deterministic block, so the same block in both files runs **once**.
+
+Two things still make this worth fixing:
+
+1. The copy in the tracked `settings.json` can be deleted by a `git pull`, which is the whole reason for the move.
+2. Blocks that **differ** both run. If one file carries an older command form and the other the current one, every turn really does report twice.
+
+So check whether the two blocks are identical before you say anything about duplicate events, and fix it either way:
 
 ```bash
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
 olakai monitor doctor --tool claude-code --fix   # or: olakai monitor repair --tool claude-code
 ```
+
+### "Every Claude Code turn really is reported twice"
+
+Confirm it against the data before you act: `olakai activity list --limit 10 --json` and look for paired events on one `chatId`. If the duplicates are real, the usual cause is **two hook handlers that differ**, not two that match. Compare the `hooks` block in both settings files, look for an Olakai handler installed by something other than `olakai monitor init`, then run the `--fix` above to leave a single current block in `settings.local.json`.
 
 ### "I edited my settings file by hand and broke it"
 

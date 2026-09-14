@@ -115,7 +115,7 @@ Up to **0.13.0** the hooks went into `.claude/settings.json`. Teams commonly tra
 What this means in practice:
 
 - **Upgrading from 0.13.0 or earlier?** Your hooks are still in `.claude/settings.json`. Confirm `olakai --version` reports 0.14.0 or later (see the version guard above), then run `olakai monitor doctor --tool claude-code --fix` (or `olakai monitor repair --tool claude-code`) to migrate them. `olakai monitor init --tool claude-code` migrates them too. On 0.13.0 the same `--fix` puts the hooks back into `.claude/settings.json` and reports success.
-- **Never keep a hook block in both files.** Claude Code merges the `hooks` block across `settings.json` and `settings.local.json` rather than letting one override the other. A block in both fires the hooks twice and double-reports every event. This is why `init` **migrates** the legacy block instead of adding a second one.
+- **Why `init` migrates rather than adds.** Claude Code merges the `hooks` block across `settings.json` and `settings.local.json`: neither file suppresses the other. Identical handlers are then deduplicated, so the CLI's own block left in both files runs **once**. Two blocks both run, and events duplicate, only when they **differ** (an older command form beside the current one, for example). So the reason to migrate is not double-firing: it is that a block sitting in the tracked `settings.json` is one `git pull` away from deletion. `init` migrates the legacy block so nothing is left there to delete or to drift out of step.
 - **A `settings.json` with no Olakai hooks is left byte-identical.** `init`, `status` and `disable` do not rewrite it. Running the CLI never dirties your team's tracked settings file.
 - **The gitignore guarantee is verified, not assumed.** `init` and `doctor` run `git check-ignore` on the hook file and warn when it is not ignored. They stay silent when the workspace is not a git repository or git is unavailable. Note that `git check-ignore` reports a **tracked** file as not-ignored even when a rule matches it, which is exactly the state you want to hear about: add the file to `.gitignore` **and** `git rm --cached` it.
 
@@ -251,7 +251,7 @@ olakai monitor status --tool claude-code      # this workspace
 olakai monitor doctor --tool claude-code      # full ordered health check
 ```
 
-`status` confirms `Stop` and `SubagentStop` hooks are registered and the config at `.olakai/monitor-claude-code.json` is valid. It finds the hooks in **either** `.claude/settings.local.json` or `.claude/settings.json`, names the file they are in, and warns when they are in **both** (that duplicate fires every hook twice). `status` never rewrites `settings.json`. `doctor` runs the deeper chain (registry → config → hooks → key → agent → events).
+`status` confirms `Stop` and `SubagentStop` hooks are registered and the config at `.olakai/monitor-claude-code.json` is valid. It finds the hooks in **either** `.claude/settings.local.json` or `.claude/settings.json`, names the file they are in, and warns when they are in **both**. Treat that warning as an unfinished migration, not as duplicate reporting: identical blocks are deduplicated and run once. It matters because the copy in the tracked `settings.json` can be deleted by a `git pull`, and because two blocks that later drift apart would both run. `status` never rewrites `settings.json`. `doctor` runs the deeper chain (registry → config → hooks → key → agent → events).
 
 ### What gets captured (Claude Code)
 
