@@ -496,7 +496,8 @@ olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-c
                                                          # ADMIN, >= 0.13.0: zero-touch fleet rollout. Per roster email:
                                                          #   resolve-or-create EMPLOYEE user, create developer-owned agent,
                                                          #   mint SDK key, write Intune-ready bundle <out>/<localpart>/
-                                                         #   (.claude/settings.json + .olakai/monitor-claude-code.json)
+                                                         #   (.claude/settings.local.json + .olakai/monitor-claude-code.json;
+                                                         #    settings.local.json since 0.14.0, .claude/settings.json before)
                                                          #   + keymap.json/csv at the out root. Plaintext keys ONLY at
                                                          #   creation/rotation; re-runs return existing devs as "reused"
                                                          #   (no key, no bundle). v1 supports --tool claude-code ONLY.
@@ -524,7 +525,16 @@ olakai monitor repair --tool <t>                         # Forceful re-init pres
 # and dispatcher/post-error events at /tmp/olakai-monitor-debug-<pid>.log.
 # When picking an existing agent during init, the CLI calls GET /api/monitoring/prompt/me with the
 # pasted key and aborts (default n) if the resolved agent doesn't match the picked one.
-# Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.json);
+# Scope is honest per tool: Claude Code installs hooks at the WORKSPACE level (.claude/settings.local.json,
+# olakai-cli >= 0.14.0; 0.13.0 and earlier wrote .claude/settings.json). settings.local.json is the project-scoped
+# personal settings file and is conventionally gitignored, so a teammate's commit cannot delete the hooks.
+# `init` MIGRATES a legacy block out of .claude/settings.json instead of adding a second one: Claude Code merges the
+# hooks block across both files, so a block in both fires the hook twice and double-reports events. `doctor` reports
+# a legacy-only or duplicated install as a fixable warn; `doctor --fix` and `repair` migrate it. A settings.json with
+# no Olakai hooks is left byte-identical by init, status and disable. `status` reports hooks found in either file,
+# names the file, and warns when they are in both. init and doctor also VERIFY the gitignore guarantee with
+# `git check-ignore` and warn when the hook file is not ignored (they stay silent outside a repo). Note check-ignore
+# reports not-ignored for a TRACKED file even when a rule matches, which is exactly that broken state.
 # Codex, Cursor, Gemini CLI, and Antigravity install hooks GLOBALLY (~/.codex/config.toml, ~/.cursor/hooks.json,
 # ~/.gemini/settings.json, ~/.gemini/config/hooks.json). Per-workspace agent linkage for all five lives in
 # .olakai/monitor-<tool>.json. Note Antigravity (~/.gemini/config/hooks.json) is a different file from

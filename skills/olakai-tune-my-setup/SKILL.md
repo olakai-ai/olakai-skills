@@ -24,7 +24,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Tune My Setup
@@ -116,7 +116,7 @@ You may propose edits only to these paths, and to no others:
 
 | Tool | Instructions | Skills / agents | Settings |
 |---|---|---|---|
-| Claude Code | `./CLAUDE.md`, `~/.claude/CLAUDE.md` | `.claude/skills/`, `.claude/agents/` (and the `~/.claude/` equivalents) | `.claude/settings.json`, `~/.claude/settings.json` |
+| Claude Code | `./CLAUDE.md`, `~/.claude/CLAUDE.md` | `.claude/skills/`, `.claude/agents/` (and the `~/.claude/` equivalents) | `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude/settings.json` |
 | Codex CLI | `./AGENTS.md`, `~/.codex/AGENTS.md` | — | `~/.codex/config.toml` |
 | Cursor | `./AGENTS.md`, `.cursor/rules/` | — | `.cursor/hooks.json` |
 | Gemini CLI | `./GEMINI.md`, `~/.gemini/GEMINI.md` | — | `~/.gemini/settings.json` |
@@ -233,18 +233,23 @@ ls CLAUDE.md AGENTS.md .cursorrules GEMINI.md 2>/dev/null
 ls -la .claude/ 2>/dev/null
 ls .claude/skills/ .claude/agents/ 2>/dev/null
 
+# Project-level settings: read BOTH. Claude Code merges them.
+ls .claude/settings.json .claude/settings.local.json 2>/dev/null
+
 # User-level config
 ls ~/.claude/CLAUDE.md ~/.claude/skills/ ~/.claude/agents/ ~/.claude/settings.json 2>/dev/null
 ```
 
-Then read the relevant ones. Focus on the growth edge's surface — if the growth edge is `verification`, read what the instruction file says about testing, review and gates, and read the hooks in `settings.json`. Do not read the entire tree.
+**Claude Code has two project settings files, and hooks can be in either.** `.claude/settings.json` is the tracked team file. `.claude/settings.local.json` is the personal, conventionally gitignored one, and it is where `olakai monitor init` puts the monitoring hooks on olakai-cli **≥ 0.14.0**. Claude Code **merges** the `hooks` block across both files rather than letting one override the other. Read both before you conclude anything about hooks. A hook you judge "missing" from `settings.json` may be running from `settings.local.json`, and a hook you add to `settings.json` that already exists in `settings.local.json` will fire twice.
+
+Then read the relevant ones. Focus on the growth edge's surface — if the growth edge is `verification`, read what the instruction file says about testing, review and gates, and read the hooks in **both** project settings files. Do not read the entire tree.
 
 Build a short inventory of what is **declared**:
 
 - What does the instruction file mandate? Quote the specific lines.
 - Which skills exist? (Note: existing ≠ firing. The setup signals say which actually fired.)
 - Which subagents are defined, and with what tools?
-- What hooks are configured, on which events?
+- What hooks are configured, on which events, and in **which** of the two project settings files?
 - What model / reasoning-effort configuration is set?
 
 ---
@@ -287,6 +292,10 @@ Where each surface lands, **for Claude Code**. For Codex, Cursor, Gemini CLI or 
 | `hook` | the `hooks` block in `.claude/settings.json` |
 | `model` | the model / effort settings in `.claude/settings.json`, or per-subagent frontmatter |
 | `permission` | the `permissions` block in `.claude/settings.json` |
+
+A lever lands in `.claude/settings.json` because the practice is meant to apply to everyone on the project. Before you propose a `hook`, check `.claude/settings.local.json` for the same hook: Claude Code merges the `hooks` block across both files, so proposing one that already exists there makes it fire twice. Propose the lever in `.claude/settings.local.json` instead when the user says the change is for them alone.
+
+Do not propose edits to the Olakai monitoring hooks (`Stop` / `SubagentStop` running `olakai monitor hook ...`). They are not setup levers. `olakai monitor` owns them.
 
 Then **stop and ask**. Do not write anything yet.
 
@@ -335,7 +344,7 @@ If you are on the CLI transport, you cannot record. Say so: tell the user what y
 You: /olakai-tune-my-setup
 
 [reads get_my_ai_fluency, get_my_coding_setup_signals, get_my_fluency_recommendations]
-[reads CLAUDE.md, .claude/settings.json, .claude/agents/]
+[reads CLAUDE.md, .claude/settings.json, .claude/settings.local.json, .claude/agents/]
 
 Your growth edge is **verification** (4.2/10 across 6 scored episodes). Olakai
 points that at the "Trust but verify" pattern.

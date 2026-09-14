@@ -28,7 +28,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.17.0"
+  version: "1.18.0"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -56,7 +56,7 @@ Five tools are supported, all behind the same `olakai monitor` command, gated by
 | Gemini CLI | `gemini-cli` | `0.26.0` |
 | Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
-> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Upgrade with `npm install -g olakai-cli@latest`.
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). Upgrade with `npm install -g olakai-cli@latest`, and confirm with `olakai --version`.
 >
 > Since **olakai-cli 0.13.0**, every monitored event also reports the CLI version that produced it — no action needed, but it helps diagnose version drift across machines.
 
@@ -98,13 +98,26 @@ olakai agents mine --source codex --json
 
 | Tool | Hook scope | Where hooks are written | Agent linkage (per-workspace) |
 |------|-----------|-------------------------|-------------------------------|
-| Claude Code | **Workspace** | `.claude/settings.json` (this workspace only) | `.olakai/monitor-claude-code.json` |
+| Claude Code | **Workspace** | `.claude/settings.local.json` (this workspace only, **≥ 0.14.0**) | `.olakai/monitor-claude-code.json` |
 | Codex CLI | **Global** | `~/.codex/config.toml` (all workspaces) | `.olakai/monitor-codex.json` |
 | Cursor | **Global** | `~/.cursor/hooks.json` (all workspaces) | `.olakai/monitor-cursor.json` |
 | Gemini CLI | **Global** | `~/.gemini/settings.json` (all workspaces) | `.olakai/monitor-gemini-cli.json` |
 | Antigravity | **Global** | `~/.gemini/config/hooks.json` (all workspaces) | `.olakai/monitor-antigravity.json` |
 
 For all five tools, the per-workspace `.olakai/monitor-<tool>.json` file holds the **agent linkage** (API key + agent ID + endpoint).
+
+### Claude Code hooks live in `.claude/settings.local.json` (olakai-cli ≥ 0.14.0)
+
+Up to **0.13.0** the hooks went into `.claude/settings.json`. Teams commonly track that file in git, so a `git pull` could rewrite it, delete the hook block, and stop monitoring with no error. Since **0.14.0** the hooks go into `.claude/settings.local.json`: the project-scoped personal settings file, which is conventionally gitignored.
+
+What this means in practice:
+
+- **Upgrading from 0.13.0 or earlier?** Your hooks are still in `.claude/settings.json`. Run `olakai monitor doctor --tool claude-code --fix` (or `olakai monitor repair --tool claude-code`) to migrate them. `olakai monitor init --tool claude-code` migrates them too.
+- **Never keep a hook block in both files.** Claude Code merges the `hooks` block across `settings.json` and `settings.local.json` rather than letting one override the other. A block in both fires the hooks twice and double-reports every event. This is why `init` **migrates** the legacy block instead of adding a second one.
+- **A `settings.json` with no Olakai hooks is left byte-identical.** `init`, `status` and `disable` do not rewrite it. Running the CLI never dirties your team's tracked settings file.
+- **The gitignore guarantee is verified, not assumed.** `init` and `doctor` run `git check-ignore` on the hook file and warn when it is not ignored. They stay silent when the workspace is not a git repository or git is unavailable. Note that `git check-ignore` reports a **tracked** file as not-ignored even when a rule matches it, which is exactly the state you want to hear about: add the file to `.gitignore` **and** `git rm --cached` it.
+
+Only Claude Code changed. Codex, Cursor, Gemini CLI and Antigravity write to `~/` paths and are unaffected.
 
 > ⚠️ **Unattributed activity caveat (Codex / Cursor / Gemini CLI / Antigravity).** Because Codex, Cursor, Gemini CLI, and Antigravity install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor/Gemini CLI/Antigravity activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
 >
@@ -182,7 +195,9 @@ olakai admin monitor bulk-provision \
 1. Resolves or creates an EMPLOYEE user on your account
 2. Creates a Claude Code agent **owned by that developer** (`creatorUserId`), so Coding IQ attribution is per-developer
 3. Mints an SDK key
-4. Writes a device-management-ready bundle under `<out>/<localpart>/`: `.claude/settings.json` (hook block) and `.olakai/monitor-claude-code.json` (agentId / apiKey / monitoringEndpoint, mode 0600) — push both into the target repo/home layout. A `keymap.json` / `keymap.csv` (0600) at the out root maps emails → agents → keys.
+4. Writes a device-management-ready bundle under `<out>/<localpart>/`: `.claude/settings.local.json` (hook block, **≥ 0.14.0**; bundles from 0.13.0 carried `.claude/settings.json`) and `.olakai/monitor-claude-code.json` (agentId / apiKey / monitoringEndpoint, mode 0600) — push both into the target repo/home layout. A `keymap.json` / `keymap.csv` (0600) at the out root maps emails → agents → keys.
+
+> **Why `settings.local.json` in the bundle matters at rollout scale.** The bundle is pushed onto developer machines by device management. A bundled `.claude/settings.json` **replaces** whatever the team tracks in git on each machine it lands on. `settings.local.json` is personal and gitignored, so the push adds the hooks without touching the team's tracked file. If you already rolled out 0.13.0 bundles, re-run bulk-provision on 0.14.0 and push the new bundles, or have each developer run `olakai monitor doctor --tool claude-code --fix`.
 
 Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision` endpoint on **your own instance** (SaaS or on-prem), in chunks of 100 emails (server rate limit: 10 requests / 120s per admin).
 
@@ -207,9 +222,12 @@ olakai monitor init --tool claude-code
 
 **What it does:**
 1. Creates an agent with `AgentSource.CLAUDE_CODE` on your Olakai account
-2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.json` (**workspace-scoped**)
+2. Writes `Stop` and `SubagentStop` hook entries to `.claude/settings.local.json` (**workspace-scoped**, **≥ 0.14.0**). If a legacy Olakai hook block is still in `.claude/settings.json`, `init` **migrates** it: the block moves to `settings.local.json` and `init` tells you it did so. A `settings.json` that holds no Olakai hooks is left byte-identical.
 3. Saves configuration to `.olakai/monitor-claude-code.json` (API key, agent ID, endpoint). Pre-Stage-2 installs at `.claude/olakai-monitor.json` are auto-migrated on first read.
 4. Records this workspace in the machine registry (`~/.olakai/registry.json`) so `monitor list` / `doctor` can see it.
+5. Checks the hook file against `git check-ignore` and warns if it is not gitignored (silent outside a git repository).
+
+**Your API key is protected against a failed install.** Picking an existing agent rotates its key, and a plaintext key is shown only once. So `init` parses the settings files **before** it provisions, and writes `.olakai/monitor-claude-code.json` **before** it writes the hooks. A settings file that will not parse stops the run before any key is rotated, and a rotated key is on disk before the hook write is attempted.
 
 The command is interactive — it prompts for an agent name if one is not provided, and lets you pick an existing agent or create a new one.
 
@@ -222,7 +240,7 @@ olakai monitor status --tool claude-code      # this workspace
 olakai monitor doctor --tool claude-code      # full ordered health check
 ```
 
-`status` confirms `Stop` and `SubagentStop` hooks are registered in `.claude/settings.json` and the config at `.olakai/monitor-claude-code.json` is valid. `doctor` runs the deeper chain (registry → config → hooks → key → agent → events).
+`status` confirms `Stop` and `SubagentStop` hooks are registered and the config at `.olakai/monitor-claude-code.json` is valid. It finds the hooks in **either** `.claude/settings.local.json` or `.claude/settings.json`, names the file they are in, and warns when they are in **both** (that duplicate fires every hook twice). `status` never rewrites `settings.json`. `doctor` runs the deeper chain (registry → config → hooks → key → agent → events).
 
 ### What gets captured (Claude Code)
 
@@ -538,7 +556,7 @@ olakai monitor disable --tool antigravity
 ```
 
 **What this does:**
-- Removes the registered hooks from the tool's settings file
+- Removes the registered hooks from the tool's settings file. For Claude Code on **≥ 0.14.0** that is `.claude/settings.local.json`. A `.claude/settings.json` that holds no Olakai hooks is left byte-identical.
 - Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` / `monitor-gemini-cli.json` / `monitor-antigravity.json` (and any legacy `.claude/olakai-monitor.json`)
 - Removes this workspace's entry from the machine registry (`~/.olakai/registry.json`)
 
