@@ -197,7 +197,7 @@ scoop install olakai/olakai-beta
 
 Supported targets for the beta: macOS (Apple silicon and Intel), Linux (x86_64 and arm64), and Windows (x86_64).
 
-**Updating the beta:** `olakai update` prints the right update command for how you installed it. It does not replace itself. The update commands are:
+**Updating the beta:** the standalone beta's `olakai update` prints the right update command for how you installed it. It does not replace itself. The npm CLI has no `update` command. npm users update with `npm install -g olakai-cli`. The update commands are:
 
 - Install script: re-run the same command. It replaces the binary in place.
 
@@ -505,7 +505,7 @@ olakai kpis create \
 | Problem | Solution |
 |---------|----------|
 | `command not found: olakai` | Reinstall CLI: `npm install -g olakai-cli`. No Node.js 20+? Offer the [standalone beta](#23-standalone-binary-beta-no-nodejs-required) |
-| Two `olakai` on PATH (`olakai monitor doctor` warns) | Ask the user which copy to keep. Remove the other copy only after they confirm: `npm uninstall -g olakai-cli`, or remove the standalone beta copy. See [2.3](#23-standalone-binary-beta-no-nodejs-required) |
+| Two `olakai` on PATH (`which -a olakai` or `where.exe olakai` lists copies in different directories; the standalone beta's `olakai monitor doctor` also warns) | Ask the user which copy to keep. Remove the other copy only after they confirm: `npm uninstall -g olakai-cli`, or remove the standalone beta copy. See [2.3](#23-standalone-binary-beta-no-nodejs-required) |
 | `Not authenticated` | Run `olakai login` |
 | `Network error` | Check internet connection, try again |
 

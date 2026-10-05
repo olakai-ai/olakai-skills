@@ -232,20 +232,21 @@ This happens when the standalone binary (beta) is installed and the npm CLI (`ol
 Detect it:
 
 ```bash
-olakai monitor doctor    # warns when more than one olakai is on PATH
 which -a olakai          # macOS / Linux: lists every olakai on PATH
 ```
 
 On Windows, run `where.exe olakai`.
 
-`olakai monitor doctor` is the primary check. Copies count only when they are in different directories. npm's `olakai` and `olakai.cmd` in the same folder are one copy.
+This is the primary check, and it works for both installs. Copies count only when they are in different directories. npm's `olakai` and `olakai.cmd` in the same folder are one copy.
+
+The standalone beta's `olakai monitor doctor` also warns when more than one `olakai` is on PATH. The npm 0.x CLI's doctor has no PATH check, so do not rely on doctor alone.
 
 Fix it: ask the user which copy to keep. Remove the other copy only after they confirm.
 
 - To keep the standalone beta, remove the npm copy: `npm uninstall -g olakai-cli`
 - To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete the binary the install script placed (`~/.local/bin/olakai`, or `/usr/local/bin/olakai` if installed with `--global`)
 
-Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `olakai monitor doctor` again to confirm the warning is gone.
+Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `which -a olakai` (or `where.exe olakai`) again to confirm only one copy is left.
 
 ### "I edited my settings file by hand and broke it"
 
