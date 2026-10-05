@@ -309,13 +309,11 @@ The default route, and what "analyze my governance risks" means.
 
    **Name the source, and do not mix sources in one table.** The digests split
    assistive from agentic by whether the interaction has an agent attached,
-   while an analytics query scoped `is_assistive` splits by touchpoint. For most
-   accounts these agree; where SDK or Zapier traffic arrives without an agent
-   they do not, and the same account can yield two defensible compliance rates.
-   Say "per the Assistive IQ digest" or "per an analytics query scoped
-   `is_assistive`", pick one for the whole answer, and if a figure you quote
-   disagrees with what the user sees on a page, say which definition each uses
-   rather than asserting one is wrong.
+   while an analytics query scoped `is_assistive` splits by touchpoint. On
+   current data these two agree exactly, so a difference between them is a
+   signal worth investigating, not rounding error to wave away. Say "per the
+   Assistive IQ digest" or "per an analytics query scoped `is_assistive`", and
+   pick one for the whole answer so a reader can reproduce it.
 3. Band split and sensitivity mix (see the Cookbook).
 4. `get_governance_policies` for what is configured.
 
