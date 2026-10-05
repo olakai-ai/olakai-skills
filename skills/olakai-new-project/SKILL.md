@@ -30,7 +30,7 @@ This skill guides you through creating a new AI agent that is fully integrated w
 ## Prerequisites
 
 Before starting, ensure:
-1. Olakai CLI installed: `npm install -g olakai-cli`. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
+1. Olakai CLI installed. If it is not, ask the user, then run `npm install -g olakai-cli` after they say yes. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
 2. CLI authenticated: `olakai login`
 3. API key for SDK (generated per-agent via CLI - see Step 2.1)
 

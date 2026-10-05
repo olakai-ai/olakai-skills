@@ -157,6 +157,8 @@ if (Get-Command node -ErrorAction SilentlyContinue) { node -p "process.versions.
 
 ### 2.2 Install via npm (default, stable)
 
+Ask the user before you run it. Run it only after they say yes.
+
 ```bash
 npm install -g olakai-cli
 ```
@@ -197,7 +199,7 @@ scoop install olakai/olakai-beta
 
 Supported targets for the beta: macOS (Apple silicon and Intel), Linux (x86_64 and arm64), and Windows (x86_64).
 
-**Updating the beta:** the standalone beta's `olakai update` prints the right update command for how you installed it. It does not replace itself. The npm CLI has no `update` command. npm users update with `npm install -g olakai-cli`. The update commands are:
+**Updating the beta:** the standalone beta's `olakai update` prints the right update command for how you installed it. It does not replace itself. Ask the user before you run any update command below. The npm CLI has no `update` command. npm users update with `npm install -g olakai-cli`. The update commands are:
 
 - Install script: re-run the same command. It replaces the binary in place.
 
@@ -222,6 +224,8 @@ olakai --version
 ```
 
 ### 2.5 Troubleshooting Installation
+
+These fixes install software or change the user's npm config and shell profile. Show them to the user and ask before you run any of them.
 
 **Permission errors on macOS/Linux:**
 ```bash
@@ -504,7 +508,7 @@ olakai kpis create \
 
 | Problem | Solution |
 |---------|----------|
-| `command not found: olakai` | Reinstall CLI: `npm install -g olakai-cli`. No Node.js 20+? Offer the [standalone beta](#23-standalone-binary-beta-no-nodejs-required) |
+| `command not found: olakai` | Ask the user, then reinstall the CLI: `npm install -g olakai-cli`. No Node.js 20+? Offer the [standalone beta](#23-standalone-binary-beta-no-nodejs-required) |
 | Two `olakai` on PATH (`which -a olakai` or `where.exe olakai` lists copies in different directories; the standalone beta's `olakai monitor doctor` also warns) | Ask the user which copy to keep. Remove the other copy only after they confirm: `npm uninstall -g olakai-cli`, or remove the standalone beta copy. See [2.3](#23-standalone-binary-beta-no-nodejs-required) |
 | `Not authenticated` | Run `olakai login` |
 | `Network error` | Check internet connection, try again |
@@ -535,7 +539,7 @@ which olakai              # CLI installed?
 olakai whoami             # Authenticated?
 olakai agents list        # Agents exist?
 
-# Setup commands
+# Setup commands (ask the user before you run any install command)
 npm install -g olakai-cli # Install CLI (stable, needs Node.js 20+)
 # No Node.js? Standalone binary (beta), see Step 2.3
 olakai login              # Authenticate

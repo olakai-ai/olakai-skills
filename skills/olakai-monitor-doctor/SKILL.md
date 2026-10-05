@@ -32,7 +32,7 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
-> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest` (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
+> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 
 ## Check your CLI version before migrating
 
@@ -194,6 +194,8 @@ cursor --version                        # confirm >= 1.7
 ### "My Claude Code hooks disappeared after a git pull"
 
 Hooks installed by olakai-cli **0.13.0 or earlier** sit in `.claude/settings.json`, which most teams track in git. A pull that rewrites that file deletes them, and monitoring stops with no error.
+
+Ask the user before you run the upgrade on the first line. Run it only after they say yes.
 
 ```bash
 npm install -g olakai-cli@latest                 # npm installs only; standalone beta users run `olakai update` to see their command

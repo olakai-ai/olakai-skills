@@ -34,7 +34,7 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 ## Prerequisites
 
 - Existing working AI agent/application using OpenAI, Anthropic, or other LLM
-- Olakai CLI installed and authenticated (`npm install -g olakai-cli && olakai login`). No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
+- Olakai CLI installed and authenticated. If it is not, ask the user, then run `npm install -g olakai-cli && olakai login` after they say yes. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
 - Olakai API key for your agent (get via CLI: `olakai agents get AGENT_ID --json | jq '.apiKey'`)
 - Node.js 18+ (for TypeScript) or Python 3.7+ (for Python)
 
@@ -401,6 +401,9 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
 | No ROI tracking | Calculated business value |
 
 #### 5.1 Install CLI (if not already)
+
+Ask the user before you run it. Run it only after they say yes.
+
 ```bash
 npm install -g olakai-cli
 olakai login
