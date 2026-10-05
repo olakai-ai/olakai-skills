@@ -32,7 +32,7 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
-> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest`. The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. For install options without Node.js, see `/olakai-get-started`.
+> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest` (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 
 ## Check your CLI version before migrating
 
@@ -196,7 +196,7 @@ cursor --version                        # confirm >= 1.7
 Hooks installed by olakai-cli **0.13.0 or earlier** sit in `.claude/settings.json`, which most teams track in git. A pull that rewrites that file deletes them, and monitoring stops with no error.
 
 ```bash
-npm install -g olakai-cli@latest
+npm install -g olakai-cli@latest                 # npm installs only; standalone beta users run `olakai update` to see their command
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
 olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
 ```
@@ -227,7 +227,7 @@ Confirm it against the data before you act: `olakai activity list --limit 10 --j
 
 ### "Two `olakai` on PATH"
 
-This happens when the standalone binary (beta) is installed and the npm CLI (`olakai-cli`) is still installed too. Agent hooks run `olakai monitor hook ...`, so they may run either copy. Keep only one.
+This happens when the standalone binary (beta) is installed and the npm CLI (`olakai-cli`) is still installed too. Agent hooks run `olakai monitor hook ...`, so they may run either copy. Only one copy should stay.
 
 Detect it:
 
@@ -238,10 +238,12 @@ which -a olakai          # macOS / Linux: lists every olakai on PATH
 
 On Windows, run `where.exe olakai`.
 
-Fix it by removing one copy:
+`olakai monitor doctor` is the primary check. Copies count only when they are in different directories. npm's `olakai` and `olakai.cmd` in the same folder are one copy.
+
+Fix it: ask the user which copy to keep. Remove the other copy only after they confirm.
 
 - To keep the standalone beta, remove the npm copy: `npm uninstall -g olakai-cli`
-- To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete `~/.local/bin/olakai`
+- To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete the binary the install script placed (`~/.local/bin/olakai`, or `/usr/local/bin/olakai` if installed with `--global`)
 
 Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `olakai monitor doctor` again to confirm the warning is gone.
 

@@ -653,8 +653,8 @@ Two consequences when editing it:
 ## Version Coordination
 
 **Versions are PER SKILL, not in lockstep** — whatever this section used to
-say. On `main` today the live values are 1.1.0, 1.12.0, 1.16.0, 1.18.0 and
-1.20.0 across eleven skills, and `plugin.json` is at 1.20.1. A skill's
+say. Each of the twelve skills carries its own value, and they differ from
+each other. Read them from each SKILL.md, not from this file. A skill's
 `metadata.version` tracks that skill; the plugin version tracks the bundle.
 
 So:
@@ -676,7 +676,7 @@ The authoritative source for current published SDK/CLI versions is:
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
 - CLI: `olakai-cli` 0.15.1 (npm, stable). Install: `npm install -g olakai-cli`. Needs Node.js 20+.
-- CLI: 1.0.0-beta.1 (standalone, beta). A single native binary, no Node.js required. Same commands, flags and config files as the npm CLI. Install and update steps live in `olakai-get-started` only. Always call it beta.
+- CLI: 1.0.0-beta.1 (standalone, beta). A single native binary, no Node.js required. Same commands, flags and config files as the npm CLI. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. Install and update steps live in `olakai-get-started` only. Always call it beta.
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 

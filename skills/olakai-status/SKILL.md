@@ -37,7 +37,7 @@ which olakai || echo "NOT_INSTALLED"
 
 If the output is `NOT_INSTALLED`, tell the user:
 
-> The Olakai CLI is not installed. Run `npm install -g olakai-cli` then try again. No Node.js 20+? Use the standalone binary (beta) from `/olakai-get-started`.
+> The Olakai CLI is not installed. Run `npm install -g olakai-cli` then try again. No Node.js 20+? The `/olakai-get-started` skill covers the standalone binary (beta).
 
 Stop here if not installed.
 
