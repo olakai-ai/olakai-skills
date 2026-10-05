@@ -23,7 +23,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.20.0"
+  version: "1.20.1"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -32,7 +32,7 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
-> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest`.
+> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest`. The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. For install options without Node.js, see `/olakai-get-started`.
 
 ## Check your CLI version before migrating
 
@@ -224,6 +224,26 @@ olakai monitor doctor --tool claude-code --fix   # or: olakai monitor repair --t
 ### "Every Claude Code turn really is reported twice"
 
 Confirm it against the data before you act: `olakai activity list --limit 10 --json` and look for paired events on one `chatId`. If the duplicates are real, the usual cause is **two hook handlers that differ**, not two that match. Compare the `hooks` block in both settings files, look for an Olakai handler installed by something other than `olakai monitor init`, then run the `--fix` above to leave a single current block in `settings.local.json`.
+
+### "Two `olakai` on PATH"
+
+This happens when the standalone binary (beta) is installed and the npm CLI (`olakai-cli`) is still installed too. Agent hooks run `olakai monitor hook ...`, so they may run either copy. Keep only one.
+
+Detect it:
+
+```bash
+olakai monitor doctor    # warns when more than one olakai is on PATH
+which -a olakai          # macOS / Linux: lists every olakai on PATH
+```
+
+On Windows, run `where.exe olakai`.
+
+Fix it by removing one copy:
+
+- To keep the standalone beta, remove the npm copy: `npm uninstall -g olakai-cli`
+- To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete `~/.local/bin/olakai`
+
+Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `olakai monitor doctor` again to confirm the warning is gone.
 
 ### "I edited my settings file by hand and broke it"
 

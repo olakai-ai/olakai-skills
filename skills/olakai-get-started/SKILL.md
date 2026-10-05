@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.0"
+  version: "1.18.1"
 ---
 
 # Get Started with Olakai
@@ -124,20 +124,93 @@ After verifying your email, you'll have access to the dashboard where you can se
 
 The Olakai CLI is the primary tool for configuring agents, KPIs, and custom data.
 
-### 2.1 Install via npm
+There are two ways to install it:
+
+| Option | Version | Needs Node.js | Status |
+|--------|---------|---------------|--------|
+| npm (default) | 0.15.1 | Yes, Node.js 20+ | Stable |
+| Standalone binary | 1.0.0-beta.1 | No | **Beta** |
+
+Use npm when Node.js 20+ is available. Offer the standalone beta only when Node.js is not available, or when the user says they cannot install it.
+
+### 2.1 Check for Node.js 20+
+
+```bash
+node --version || echo "NODE_NOT_INSTALLED"
+```
+
+| Result | Next step |
+|--------|-----------|
+| `v20` or later | [2.2 Install via npm](#22-install-via-npm-default-stable) |
+| Older than `v20` | Ask the user to upgrade Node.js. If they cannot, use [2.3 Standalone binary (beta)](#23-standalone-binary-beta-no-nodejs-required) |
+| `NODE_NOT_INSTALLED` | Ask the user if they can install Node.js 20+. If they cannot, use [2.3 Standalone binary (beta)](#23-standalone-binary-beta-no-nodejs-required) |
+
+### 2.2 Install via npm (default, stable)
 
 ```bash
 npm install -g olakai-cli
 ```
 
-### 2.2 Verify Installation
+This installs `olakai-cli` 0.15.1, the stable CLI. It requires Node.js 20+.
+
+### 2.3 Standalone binary (beta, no Node.js required)
+
+> **This is a beta.** Tell the user that before you install it. Do not call it stable or production-ready. Version 1.0.0-beta.1 is a single native binary. It is the same `olakai` command, with the same commands, flags and config files as the npm CLI.
+
+Pick the method for the user's OS:
+
+**macOS or Linux, install script (beta):**
+
+```bash
+curl -fsSL https://get.olakai.ai/cli | sh -s -- --beta
+```
+
+- The `--beta` flag is required. Without it, the script stops with "no stable olakai release yet".
+- It installs to `~/.local/bin/olakai`. Add `--global` to install to `/usr/local/bin` (asks for sudo).
+- It warns if the install dir is not on PATH. If it warns, add `~/.local/bin` to PATH.
+- It checks the SHA256 checksum before it unpacks the binary.
+- The script is for macOS and Linux only. It does not install on Windows.
+
+**macOS or Linux, Homebrew (beta):**
+
+```bash
+brew install olakai-ai/tap/olakai-beta
+```
+
+**Windows, Scoop (beta):**
+
+```powershell
+scoop bucket add olakai https://github.com/olakai-ai/scoop-bucket
+scoop install olakai/olakai-beta
+```
+
+Supported targets for the beta: macOS (Apple silicon and Intel), Linux (x86_64 and arm64), and Windows (x86_64). There is no beta build for Windows on ARM or for 32-bit platforms.
+
+**Updating the beta:** `olakai update` prints the right update command for how you installed it. It does not replace itself. The update commands are:
+
+- Install script: re-run the same command. It replaces the binary in place.
+
+  ```bash
+  curl -fsSL https://get.olakai.ai/cli | sh -s -- --beta
+  ```
+
+- Homebrew: `brew upgrade olakai-beta`
+- Scoop: `scoop update olakai-beta`
+
+The "update available" notice compares against the latest **stable** version. It does not tell beta users about a newer beta.
+
+**Do not keep two copies.** If the npm CLI is also installed, run `npm uninstall -g olakai-cli` after you install the standalone beta. Otherwise there are two `olakai` on PATH, and agent hooks may run either one. You do not need to log in again or re-run `olakai monitor init`, because both copies use the same config files and hook entries.
+
+**Going back to stable:** run `npm install -g olakai-cli` (stable 0.15.1), then remove the standalone beta copy with `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete `~/.local/bin/olakai`.
+
+### 2.4 Verify Installation
 
 ```bash
 olakai --version
-# Should output: olakai-cli/0.2.x
+# Prints the installed version: 0.15.1 (npm, stable) or 1.0.0-beta.1 (standalone, beta)
 ```
 
-### 2.3 Troubleshooting Installation
+### 2.5 Troubleshooting Installation
 
 **Permission errors on macOS/Linux:**
 ```bash
@@ -420,7 +493,8 @@ olakai kpis create \
 
 | Problem | Solution |
 |---------|----------|
-| `command not found: olakai` | Reinstall CLI: `npm install -g olakai-cli` |
+| `command not found: olakai` | Reinstall CLI: `npm install -g olakai-cli`. No Node.js 20+? Use the [standalone beta](#23-standalone-binary-beta-no-nodejs-required) |
+| Two `olakai` on PATH (`olakai monitor doctor` warns) | Keep one copy. Run `npm uninstall -g olakai-cli`, or remove the standalone beta copy. See [2.3](#23-standalone-binary-beta-no-nodejs-required) |
 | `Not authenticated` | Run `olakai login` |
 | `Network error` | Check internet connection, try again |
 
@@ -451,7 +525,8 @@ olakai whoami             # Authenticated?
 olakai agents list        # Agents exist?
 
 # Setup commands
-npm install -g olakai-cli # Install CLI
+npm install -g olakai-cli # Install CLI (stable, needs Node.js 20+)
+# No Node.js? Standalone binary (beta), see Step 2.3
 olakai login              # Authenticate
 olakai agents create --name "Name" --with-api-key --json  # Register agent
 
@@ -469,7 +544,7 @@ olakai activity get EVENT_ID --json
 ## Summary Checklist
 
 - [ ] Account created at https://app.olakai.ai/signup?flow=developer&source=claude-code
-- [ ] CLI installed (`npm install -g olakai-cli`)
+- [ ] CLI installed (`npm install -g olakai-cli`, or the standalone beta from Step 2.3)
 - [ ] CLI authenticated (`olakai login`)
 - [ ] First agent created with API key
 - [ ] `OLAKAI_API_KEY` environment variable set

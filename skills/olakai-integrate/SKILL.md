@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.0"
+  version: "1.18.1"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -34,7 +34,7 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 ## Prerequisites
 
 - Existing working AI agent/application using OpenAI, Anthropic, or other LLM
-- Olakai CLI installed and authenticated (`npm install -g olakai-cli && olakai login`)
+- Olakai CLI installed and authenticated (`npm install -g olakai-cli && olakai login`). No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
 - Olakai API key for your agent (get via CLI: `olakai agents get AGENT_ID --json | jq '.apiKey'`)
 - Node.js 18+ (for TypeScript) or Python 3.7+ (for Python)
 
@@ -405,6 +405,8 @@ async function processDocument(doc: Document): Promise<ProcessingResult> {
 npm install -g olakai-cli
 olakai login
 ```
+
+No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
 
 #### 5.2 Register Your Agent
 ```bash

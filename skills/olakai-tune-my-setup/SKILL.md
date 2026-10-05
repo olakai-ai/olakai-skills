@@ -24,7 +24,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Tune My Setup
@@ -143,7 +143,7 @@ The diagnosis comes from Olakai either over the MCP connector or over the CLI. C
 which olakai >/dev/null 2>&1 && olakai --version || echo "CLI_NOT_INSTALLED"
 ```
 
-The `--setup` and `--recommendations` flags need **olakai-cli >= 0.14.0**. On an older build commander exits non-zero with `error: unknown option '--recommendations'` and prints no JSON — if you see that, tell the user to run `npm install -g olakai-cli` and stop rather than trying to parse it.
+The `--setup` and `--recommendations` flags need **olakai-cli >= 0.14.0**. On an older build commander exits non-zero with `error: unknown option '--recommendations'` and prints no JSON. If you see that, tell the user to run `npm install -g olakai-cli` and stop rather than trying to parse it. If they use the standalone binary (beta), see `/olakai-get-started` for its update commands.
 
 You have the MCP connector if tools named `get_my_ai_fluency`, `get_my_coding_setup_signals`, `get_fluency_pattern_catalog` and `get_my_fluency_recommendations` are available to you.
 
@@ -153,7 +153,7 @@ Check `record_fluency_experiment` **separately**. It needs both the `self` and `
 |---|---|
 | MCP tools available | Use them. Full loop including step 7 (recording). |
 | No MCP tools, CLI installed | Use the CLI (Step 2b). You lose BOTH the adoption cross-check (Step 2c) and recording (Step 6) — the diagnosis and the proposal work in full. |
-| Neither | Stop. Tell the user to either install the connector (see `/docs/olakai/olakai-mcp-connect`) or run `npm install -g olakai-cli && olakai login`. |
+| Neither | Stop. Tell the user to either install the connector (see `/docs/olakai/olakai-mcp-connect`) or run `npm install -g olakai-cli && olakai login`. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta). |
 
 Both transports read the **same computation** on the Olakai side. The numbers and the ranking do not change with the route they arrive by.
 

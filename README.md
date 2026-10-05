@@ -57,7 +57,7 @@ The **olakai-expert** agent combines all four skills into a single specialist:
 
 Before using these skills, ensure you have:
 
-1. **Olakai CLI** installed: `npm install -g olakai-cli`
+1. **Olakai CLI** installed: `npm install -g olakai-cli` (stable 0.15.1, needs Node.js 20+). No Node.js? A standalone binary (beta) is available. See the `olakai-get-started` skill.
 2. **CLI authenticated**: `olakai login`
 3. **API key** for SDK integration (generated per-agent via CLI)
 
