@@ -189,7 +189,9 @@ The anti-pattern table cites these by number.
    product, an unscored row grades compliant, so a naive denominator reports
    unexamined traffic as compliant.
 4. **Compliance is a percentage, not a count**, and an empty risk dataset is not
-   100% compliance. Say "nothing was scored".
+   100% compliance. Say "nothing was scored". It is also reported **per suite**,
+   never as one account-wide figure (17), and it is not what the Governance
+   page's Overview cards show (18).
 5. **Two scales, never mixed.** There is no "/10" risk score to quote, and no
    blended number.
 6. **`Expected` is not a low risk grade.** Contextual-only detections are
@@ -226,6 +228,23 @@ The anti-pattern table cites these by number.
     `meta.conditionsDropped` is true or `meta.answersOriginalQuestion` is false,
     the query was silently retried **without its filters**: the rows are real
     but answer a broader question. Say so, or discard them.
+17. **Governance is reported per suite, never as one account-wide number.**
+    Every governance surface in the product is scoped to exactly one suite —
+    Assistive is `uni_Touchpoint IN ('chat','apps')`, Agent IQ is
+    `'ai agents'` with `is_coding_agent = false`, Coding IQ is the rest. A
+    combined figure therefore matches **no screen the user can open**, and
+    handing one to someone looking at a governance page is the fastest way to
+    be told your numbers are wrong. Always break compliance, risk and
+    sensitivity down by suite. A cross-suite total is optional; if you give
+    one, label it as corresponding to no page.
+18. **The Governance page's Overview cards are counts, not a compliance rate.**
+    They count *flagged risk rows needing attention* (High + Med) over a 0.2
+    floor, and one interaction fans out into up to three rows (sensitive,
+    policy, built-in). They never use the 0.6 compliance cut. Never turn
+    "N needing attention of M flagged" into a percentage, and never reconcile a
+    compliance share against it — the two are different metrics over different
+    units and will not agree at any scope. If a user quotes such a percentage,
+    say which metric theirs is before giving yours.
 
 ---
 
@@ -286,6 +305,15 @@ The default route, and what "analyze my governance risks" means.
    cross-suite roll-up. **Prefer these pre-computed rates over your own
    arithmetic**: they are the product's own numbers, and `ASSISTIVE_IQ_DIGEST`
    and `AGENTIC_IQ_DIGEST` expose the compliance numerator *and* denominator.
+   They are already per-suite, which is what you want (17).
+
+   **Name the source, and do not mix sources in one table.** The digests split
+   assistive from agentic by whether the interaction has an agent attached,
+   while an analytics query scoped `is_assistive` splits by touchpoint. On
+   current data these two agree exactly, so a difference between them is a
+   signal worth investigating, not rounding error to wave away. Say "per the
+   Assistive IQ digest" or "per an analytics query scoped `is_assistive`", and
+   pick one for the whole answer so a reader can reproduce it.
 3. Band split and sensitivity mix (see the Cookbook).
 4. `get_governance_policies` for what is configured.
 
@@ -513,6 +541,8 @@ content.>
 | "No PII detected — we're clean" | `has_pii = false` includes "never scanned". Report absence only over `sensitivity_scored = true`, with the coverage share. (1) |
 | "Compliance is 99.4%" (denominator = all rows) | Divide by `ISDEFINED(riskassessment)`, add `uni_ContentAvailable = true`, print the denominator. (2, 3) |
 | "100% compliant across 1,700 interactions" | 1,700 is volume. An empty risk dataset is not compliance. (4) |
+| "84.4% compliance, 4,258 of 5,043" (all suites at once) | No governance page is account-wide. Break it down by suite. (17) |
+| "94.4% compliant, 17 of 18" (from the Overview cards) | Those are flagged risk rows needing attention, not a compliance rate. Different metric, different unit. (18) |
 | "Average risk 0.23 out of 10" | 0-1, band cuts at 0.2/0.8, compliance cut 0.6. Report the band split, not a mean. (5) |
 | "Blended risk score: 0.5" | Two separate scales. Never averaged. (5) |
 | "847 medium-risk incidents need attention" | Contextual detections are `Expected` and count as zero needs-attention. (6) |
@@ -536,14 +566,22 @@ content.>
 All take the shape `{"query": { ... }}`. A condition is a formula:
 `{"type": "operation", "name": "=", "args": [{"type": "variable", "name": "<var>"}, <value>]}`.
 
-**1. Compliance share.** Two queries, the way the product computes it — the
-denominator filters `ISDEFINED(riskassessment)`, the numerator adds
-`riskassessment < 0.6`. Both carry `uni_ContentAvailable = true`:
+**1. Compliance share — always broken down by suite.** Two queries, the way the
+product computes it — the denominator filters `ISDEFINED(riskassessment)`, the
+numerator adds `riskassessment < 0.6`. Both carry `uni_ContentAvailable = true`.
+
+Both also carry two **non-aggregated** columns, `uni_Touchpoint` and
+`is_coding_agent`, which group the result into the suites the product actually
+shows. Without them you get one account-wide number that matches no page (17):
 
 ```json
 {"query": {
   "timeRange": {"daysBack": 30},
-  "columns": [{"name": "scored", "formula": {"type": "variable", "name": "uni_Id"}, "aggregation": "COUNT"}],
+  "columns": [
+    {"name": "touchpoint", "formula": {"type": "variable", "name": "uni_Touchpoint"}},
+    {"name": "coding", "formula": {"type": "variable", "name": "is_coding_agent"}},
+    {"name": "scored", "formula": {"type": "variable", "name": "uni_Id"}, "aggregation": "COUNT"}
+  ],
   "conditions": [
     {"type": "operation", "name": "ISDEFINED", "args": [{"type": "variable", "name": "riskassessment"}]},
     {"type": "operation", "name": "=", "args": [{"type": "variable", "name": "uni_ContentAvailable"}, true]}
@@ -551,8 +589,25 @@ denominator filters `ISDEFINED(riskassessment)`, the numerator adds
 }}
 ```
 
+Run it again with `{"type": "operation", "name": "<", "args": [{"type": "variable", "name": "riskassessment"}, 0.6]}`
+appended to `conditions` for the numerator, then fold the rows into suites:
+
+| Suite | Rows to sum |
+|---|---|
+| Assistive | `touchpoint` is `chat` or `apps` |
+| Agent IQ | `touchpoint` is `ai agents` **and** `coding` is false |
+| Coding IQ | `touchpoint` is `ai agents` **and** `coding` is true |
+
+Report the three suites as separate rows, each with its own numerator and
+denominator, and name the suite in every sentence. Lead with the suite the user
+asked about; if they did not say, lead with the ones the account is entitled to
+(Step 0 told you). A combined total is optional and must be labelled as
+matching no page.
+
 **2. Band split.** Same two conditions, grouped — or three counts with
-`riskassessment > 0.8`, `> 0.2`, `<= 0.2`.
+`riskassessment > 0.8`, `> 0.2`, `<= 0.2`. Keep the two suite columns from
+recipe 1 here too: a band split is a risk figure, so it is reported per suite
+like every other one (17).
 
 **3. Sensitivity mix.** `GROUP BY uni_Sensitivity` (the label *set*, so each row
 is one combination), filtered `sensitivity_scored = true` **and**
