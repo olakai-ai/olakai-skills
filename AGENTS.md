@@ -39,8 +39,10 @@ olakai-skills/
 │   │   └── SKILL.md              # Redirect stub — points to olakai-monitor-local-coding-agent
 │   ├── olakai-status/
 │   │   └── SKILL.md              # In-terminal Coding IQ status digest (invoked as /olakai)
-│   └── olakai-tune-my-setup/
-│       └── SKILL.md              # Fluency Feedback Loop — diff report vs local config, propose edits (~380 lines)
+│   ├── olakai-tune-my-setup/
+│   │   └── SKILL.md              # Fluency Feedback Loop — diff report vs local config, propose edits (~380 lines)
+│   └── olakai-governance/
+│       └── SKILL.md              # Read/interpret governance data over MCP — the one MCP-driven skill (~620 lines)
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
@@ -59,7 +61,8 @@ olakai-skills/
 │           ├── olakai-monitor-doctor -> ../../../skills/olakai-monitor-doctor
 │           ├── olakai-monitor-claude-code -> ../../../skills/olakai-monitor-claude-code  (redirect stub)
 │           ├── olakai-status -> ../../../skills/olakai-status
-│           └── olakai-tune-my-setup -> ../../../skills/olakai-tune-my-setup
+│           ├── olakai-tune-my-setup -> ../../../skills/olakai-tune-my-setup
+│           └── olakai-governance -> ../../../skills/olakai-governance
 ├── .claude-plugin/
 │   └── marketplace.json          # Root marketplace manifest
 ├── hooks/                        # Optional skill activation hooks
@@ -600,6 +603,27 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 3. **Test after changes** - Install skill in Claude Code and invoke it
 4. **Preserve the Golden Rule** - Test → Fetch → Validate pattern in all skills
 
+### CLI skills vs the MCP skill
+
+Every skill here but one drives the **`olakai` CLI**, read by a coding agent on
+the developer's machine. `olakai-governance` is the exception: it drives the
+**Olakai MCP connector**, so its reader is whatever assistant the user has
+connected (Claude, ChatGPT), usually with no terminal and no repository in
+front of it.
+
+Two consequences when editing it:
+
+- **Its tool names and query shapes must match the live MCP surface**, not the
+  CLI. The authoritative lists live in `localnode-app` at
+  `apps/main-app/src/app/api/mcp/_lib/curated-tools.ts` (what is callable) and
+  `apps/main-app/src/server/helpers/analytics/query-semantics.ts` (the
+  analytics vocabulary, with each variable's own caveats). A tool it names that
+  is not curated is a dead end for every reader.
+- **It is served as ONE file.** The MCP server reads `skills/<name>/SKILL.md`
+  and nothing else, so bundled reference files never reach an MCP reader — only
+  someone who installs the plugin or clones the repo. Keep everything it needs
+  inside the file.
+
 ### Adding New Skills
 
 1. Create directory in root: `skills/new-skill-name/SKILL.md`
@@ -628,12 +652,20 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 ## Version Coordination
 
-When bumping version in `plugins/olakai/.claude-plugin/plugin.json`:
+**Versions are PER SKILL, not in lockstep** — whatever this section used to
+say. On `main` today the live values are 1.1.0, 1.12.0, 1.16.0, 1.18.0 and
+1.20.0 across eleven skills, and `plugin.json` is at 1.20.0. A skill's
+`metadata.version` tracks that skill; the plugin version tracks the bundle.
 
-1. Update version number (currently 1.20.0)
-2. Update version in all SKILL.md frontmatter metadata
-3. Ensure all SKILL.md files are in sync with current CLI/SDK versions
-4. Update changelog if maintained
+So:
+
+1. Editing one skill bumps **that skill's** `metadata.version`. Do not sweep
+   the others — on a stale checkout a sweep silently DOWNGRADES every skill
+   that moved while you were away.
+2. A brand-new skill starts its own line at `1.0.0`.
+3. Bump `plugins/olakai/.claude-plugin/plugin.json` when releasing the bundle.
+4. Keep every SKILL.md in step with the current CLI/SDK versions.
+5. Update the changelog if maintained.
 
 ### SDK/CLI Versions Reference
 
