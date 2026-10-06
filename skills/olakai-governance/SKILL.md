@@ -34,7 +34,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Olakai AI Governance (over MCP)
@@ -105,7 +105,11 @@ get_usage_status          → intelligence credits; check `isDegraded`
 
 Then the coverage query. **This is the one that decides whether your answer is
 honest**, because most governance claims have a denominator much smaller than
-the window:
+the window. Use the window the user named in their request for `daysBack` below
+(quote `meta.period.label`, per rule 16); only default to 30 when no window was
+given. Someone who names a period is usually reading a screen scoped to it, and
+a coverage share measured over a different one silently misstates the
+confidence in every figure built on it:
 
 ```json
 {"query": {
