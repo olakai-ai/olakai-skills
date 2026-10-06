@@ -23,7 +23,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.20.0"
+  version: "1.20.1"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -32,7 +32,7 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
-> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. Upgrade: `npm install -g olakai-cli@latest`.
+> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 
 ## Check your CLI version before migrating
 
@@ -195,8 +195,10 @@ cursor --version                        # confirm >= 1.7
 
 Hooks installed by olakai-cli **0.13.0 or earlier** sit in `.claude/settings.json`, which most teams track in git. A pull that rewrites that file deletes them, and monitoring stops with no error.
 
+Ask the user before you run the upgrade on the first line. Run it only after they say yes.
+
 ```bash
-npm install -g olakai-cli@latest
+npm install -g olakai-cli@latest                 # npm installs only; standalone beta users run `olakai update` to see their command
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
 olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
 ```
@@ -224,6 +226,29 @@ olakai monitor doctor --tool claude-code --fix   # or: olakai monitor repair --t
 ### "Every Claude Code turn really is reported twice"
 
 Confirm it against the data before you act: `olakai activity list --limit 10 --json` and look for paired events on one `chatId`. If the duplicates are real, the usual cause is **two hook handlers that differ**, not two that match. Compare the `hooks` block in both settings files, look for an Olakai handler installed by something other than `olakai monitor init`, then run the `--fix` above to leave a single current block in `settings.local.json`.
+
+### "Two `olakai` on PATH"
+
+This happens when the standalone binary (beta) is installed and the npm CLI (`olakai-cli`) is still installed too. Agent hooks run `olakai monitor hook ...`, so they may run either copy. Only one copy should stay.
+
+Detect it:
+
+```bash
+which -a olakai          # macOS / Linux: lists every olakai on PATH
+```
+
+On Windows, run `where.exe olakai`.
+
+This is the primary check, and it works for both installs. Copies count only when they are in different directories. npm's `olakai` and `olakai.cmd` in the same folder are one copy.
+
+The standalone beta's `olakai monitor doctor` also warns when more than one `olakai` is on PATH. The npm 0.x CLI's doctor has no PATH check, so do not rely on doctor alone.
+
+Fix it: ask the user which copy to keep. Remove the other copy only after they confirm.
+
+- To keep the standalone beta, remove the npm copy: `npm uninstall -g olakai-cli`
+- To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete the binary the install script placed (`~/.local/bin/olakai`, or `/usr/local/bin/olakai` if installed with `--global`)
+
+Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `which -a olakai` (or `where.exe olakai`) again to confirm only one copy is left.
 
 ### "I edited my settings file by hand and broke it"
 

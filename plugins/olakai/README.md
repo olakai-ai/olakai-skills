@@ -24,7 +24,7 @@ Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the
 
 ## Prerequisites
 
-- [Olakai CLI](https://www.npmjs.com/package/olakai-cli): `npm install -g olakai-cli`
+- [Olakai CLI](https://www.npmjs.com/package/olakai-cli): `npm install -g olakai-cli` (stable 0.15.1, needs Node.js 20+). No Node.js? A standalone binary (beta) is available. See the `olakai-get-started` skill.
 - Olakai account and API key
 
 ## Usage

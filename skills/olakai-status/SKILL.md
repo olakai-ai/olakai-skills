@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.0"
+  version: "1.16.1"
 ---
 
 # Olakai Developer Status Digest
@@ -37,7 +37,7 @@ which olakai || echo "NOT_INSTALLED"
 
 If the output is `NOT_INSTALLED`, tell the user:
 
-> The Olakai CLI is not installed. Run `npm install -g olakai-cli` then try again.
+> The Olakai CLI is not installed. Run `npm install -g olakai-cli` then try again. No Node.js 20+? The `/olakai-get-started` skill covers the standalone binary (beta).
 
 Stop here if not installed.
 

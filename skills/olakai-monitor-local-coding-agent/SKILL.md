@@ -28,7 +28,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.20.0"
+  version: "1.20.1"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -56,7 +56,7 @@ Five tools are supported, all behind the same `olakai monitor` command, gated by
 | Gemini CLI | `gemini-cli` | `0.26.0` |
 | Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
-> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). Upgrade with `npm install -g olakai-cli@latest`.
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 >
 > Since **olakai-cli 0.13.0**, every monitored event also reports the CLI version that produced it — no action needed, but it helps diagnose version drift across machines.
 
@@ -156,7 +156,7 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 
 | Result | Action |
 |--------|--------|
-| `CLI_NOT_INSTALLED` | Run `npm install -g olakai-cli@latest`, then `olakai login` |
+| `CLI_NOT_INSTALLED` | Ask the user, then run `npm install -g olakai-cli@latest` and `olakai login` after they say yes. No Node.js 20+? Offer the standalone binary (beta) from `/olakai-get-started` |
 | `NOT_AUTHENTICATED` | Run `olakai login` |
 | Shows email/account | Ready to proceed |
 
@@ -211,7 +211,7 @@ Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision`
 - The command exits non-zero if any row fails. If a run aborts mid-way on a rate limit, unattempted emails are written to `<out>/unprocessed.txt` — re-run with that file as the roster.
 
 **Deployment gotchas:**
-1. Target machines must also have `olakai-cli` installed globally — the pushed hooks run `olakai monitor hook ...`.
+1. Target machines must also have the CLI installed: `olakai-cli` from npm, or the standalone binary (beta). The pushed hooks run `olakai monitor hook ...`.
 2. Pushed bundles do **not** appear in `olakai monitor list` / `doctor` on the target machine until the developer runs any `olakai monitor` command once (the registry reconcile backfills them). The hooks fire and report fine regardless — this only affects local visibility tooling.
 
 **Prefer a UI?** The same capability exists in the dashboard: **Coding IQ → Settings → Bulk Provisioning** (paste or upload emails → download the key-map CSV + a ZIP of bundles).
@@ -586,7 +586,7 @@ To re-enable, run `olakai monitor init --tool <tool>` again.
 
 This usually means the transcript file at `transcript_path` (Claude Code) or the equivalent for Codex/Cursor could not be read or parsed. Common causes:
 
-- CLI version too old — upgrade: `npm install -g olakai-cli@latest`
+- CLI version too old. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command)
 - Tool version too old — Codex must be ≥ `0.124.0`, Cursor must be ≥ `1.7`
 - Transcript file moved or deleted between turn end and hook firing
 - Transcript format changed in a newer tool version
@@ -618,6 +618,29 @@ The hook is designed to fail silently — errors in the monitoring hook should n
 1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent)
 2. Verify API key is valid: `olakai agents get AGENT_ID --json | jq '.apiKey'`
 3. Test connectivity: `olakai whoami`
+
+### Two `olakai` on PATH
+
+This happens when the standalone binary (beta) is installed and the npm CLI (`olakai-cli`) is still installed too. Agent hooks run `olakai monitor hook ...`, so they may run either copy. Only one copy should stay.
+
+Detect it:
+
+```bash
+which -a olakai          # macOS / Linux: lists every olakai on PATH
+```
+
+On Windows, run `where.exe olakai`.
+
+This is the primary check, and it works for both installs. Copies count only when they are in different directories. npm's `olakai` and `olakai.cmd` in the same folder are one copy.
+
+The standalone beta's `olakai monitor doctor` also warns when more than one `olakai` is on PATH. The npm 0.x CLI's doctor has no PATH check, so do not rely on doctor alone.
+
+Fix it: ask the user which copy to keep. Remove the other copy only after they confirm.
+
+- To keep the standalone beta, remove the npm copy: `npm uninstall -g olakai-cli`
+- To keep npm stable (0.15.1), remove the standalone beta copy: `brew uninstall olakai-beta`, `scoop uninstall olakai-beta`, or delete the binary the install script placed (`~/.local/bin/olakai`, or `/usr/local/bin/olakai` if installed with `--global`)
+
+Both copies use the same config files and the same hook entries, so you do not need to log in again or re-run `olakai monitor init`. Run `which -a olakai` (or `where.exe olakai`) again to confirm only one copy is left.
 
 ### Deeper issues
 

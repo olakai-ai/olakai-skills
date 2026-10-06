@@ -46,7 +46,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.20.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.20.1)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -504,7 +504,7 @@ olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-c
                                                          #   + keymap.json/csv at the out root. Plaintext keys ONLY at
                                                          #   creation/rotation; re-runs return existing devs as "reused"
                                                          #   (no key, no bundle). v1 supports --tool claude-code ONLY.
-                                                         #   Target machines still need olakai-cli installed globally;
+                                                         #   Target machines still need the CLI installed (npm or standalone beta);
                                                          #   pushed bundles appear in monitor list/doctor only after any
                                                          #   olakai monitor command runs once there (registry reconcile).
 olakai monitor status --tool claude-code|codex|cursor|gemini-cli|antigravity    # Verify hook + config installation
@@ -653,8 +653,8 @@ Two consequences when editing it:
 ## Version Coordination
 
 **Versions are PER SKILL, not in lockstep** — whatever this section used to
-say. On `main` today the live values are 1.1.0, 1.12.0, 1.16.0, 1.18.0 and
-1.20.0 across eleven skills, and `plugin.json` is at 1.20.0. A skill's
+say. Each of the twelve skills carries its own value, and they differ from
+each other. Read them from each SKILL.md, not from this file. A skill's
 `metadata.version` tracks that skill; the plugin version tracks the bundle.
 
 So:
@@ -672,10 +672,11 @@ So:
 The authoritative source for current published SDK/CLI versions is:
 `localnode-app/packages/config/sdk-versions.ts`
 
-**Current versions** (last updated July 2026):
+**Current versions** (last updated October 2026):
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
-- CLI: `olakai-cli` v0.13.0
+- CLI: `olakai-cli` 0.15.1 (npm, stable). Install: `npm install -g olakai-cli`. Needs Node.js 20+.
+- CLI: 1.0.0-beta.1 (standalone, beta). A single native binary, no Node.js required. Same commands, flags and config files as the npm CLI. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. Install and update steps live in `olakai-get-started` only. Always call it beta.
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
