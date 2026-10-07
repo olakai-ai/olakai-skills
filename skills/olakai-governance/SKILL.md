@@ -34,7 +34,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Olakai AI Governance (over MCP)
@@ -180,6 +180,21 @@ are recorded but inert, so never quote one as severity.
 ## Interpretation rules
 
 The anti-pattern table cites these by number.
+
+**They do not carry the same weight, and nearly all of them are checkable before
+you send.** Which artifact you check against decides the tier:
+
+| Tier | Rules | Check against |
+|---|---|---|
+| **Query** — the query itself is wrong without these | 2, 3, 12, 13, 15, 17 | the JSON, before you run it |
+| **Output** — the query is fine; the sentence is wrong | 1, 4, 5, 6, 7, 8, 11, 14, 18 | the drafted answer, before you send it |
+| **Background** — a fact that informs framing; nothing to check | 9, 10 | — |
+
+Rule **16 spans both**: "quote `meta.period.label`" is an output check, but
+`meta.conditionsDropped` or `answersOriginalQuestion: false` means the query ran
+**without its filters**, which invalidates the rows — that half is query-tier.
+Adapt a Query cookbook recipe rather than composing from scratch; the recipes
+already carry the query-tier conditions.
 
 1. **Coverage before conclusion.** `sensitivity_scored = false` and a null
    `riskassessment` mean *not examined*, not *clean*. Every governance claim
