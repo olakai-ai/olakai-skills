@@ -522,7 +522,8 @@ olakai monitor install-hooks [--tool claude-code,codex,cursor]
                                                          #   then run install-hooks --tool codex,cursor.
 # Hook key lookup (>= 1.0.0-beta.4): walk up from the workspace for .olakai/monitor-<tool>.json, then
 # ~/.olakai/monitor-<tool>.json. A workspace config wins (Cursor multi-root too). status/doctor/repair print
-# "Using home key file <path>". Root == home is USER scope: init, doctor --fix, repair and disable keep the
+# "Using home key file <path>" on stderr, only when run from a project folder, not the home folder (from home,
+# status reports the home config directly and prints no such line). Root == home is USER scope: init, doctor --fix, repair and disable keep the
 # Claude hooks in ~/.claude/settings.json (no migration to settings.local.json, which Claude Code does not read
 # at user level). doctor --fix is safe there on 1.0.0-beta.4+; npm 0.x moves them to the inert file.
 # Behind a TLS-inspecting proxy add the instance host to NO_PROXY; tools see a machine env var only after a
@@ -696,7 +697,7 @@ The authoritative source for current published SDK/CLI versions is:
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
 - CLI: `olakai-cli` 0.15.1 (npm, stable). Install: `npm install -g olakai-cli`. Needs Node.js 20+.
-- CLI: 1.0.0-beta.4 (standalone, beta; get.olakai.ai, Homebrew, Scoop, or npm `olakai-cli@next`). A single native binary, no Node.js required. Same commands, flags and config files as the npm CLI. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. It adds the fleet rollout (`monitor install-hooks`, multi-tool `bulk-provision`, home key file) and `olakai update`. Install and update steps live in `olakai-get-started` only. Always call it beta.
+- CLI: 1.0.0-beta.4 (standalone, beta; get.olakai.ai, Homebrew, Scoop, or npm `olakai-cli@next`). A single native binary, no Node.js required. It has every command and flag of the npm CLI and the same config files. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. It adds `monitor install-hooks` and `olakai update`, and its `admin monitor bulk-provision` writes home-folder key files instead of the npm per-repo bundle. On 1.x never run `npm install -g olakai-cli@latest` (downgrades to 0.15.1); use `olakai update`. Install and update steps live in `olakai-get-started` only. Always call it beta.
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
