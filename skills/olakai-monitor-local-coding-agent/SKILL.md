@@ -20,7 +20,8 @@ description: |
   workspace, track sessions, is my monitoring working, monitoring not working,
   no events from claude code, claude code monitoring, codex monitoring,
   cursor monitoring, agents mine, where am i monitoring, bulk provision,
-  bulk-provision, fleet rollout, intune, provision my team, admin monitor.
+  bulk-provision, fleet rollout, intune, jamf, mdm, provision my team, admin monitor,
+  install-hooks, home key file.
   DO NOT load for: instrumenting your own agent's SDK code (use olakai-integrate),
   creating agents from scratch with custom code (use olakai-new-project),
   generic SDK / KPI / event troubleshooting unrelated to a coding tool
@@ -28,7 +29,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.20.1"
+  version: "1.21.0"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -56,7 +57,7 @@ Five tools are supported, all behind the same `olakai monitor` command, gated by
 | Gemini CLI | `gemini-cli` | `0.26.0` |
 | Antigravity CLI | `antigravity` | recent agy w/ hooks (validated 1.0.4) |
 
-> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0**. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
+> **CLI requirement:** the `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` / `agents archive|rename|delete` commands documented here require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. The admin `bulk-provision` command requires **≥ 0.13.0** (Claude Code only, per-repo bundles). The multi-tool fleet flow (`--tool claude-code,codex,cursor`, `monitor install-hooks`, home key file) needs the **standalone CLI 1.0.0-beta.4 or later** (beta); no npm stable release has it. Claude Code hooks move to `.claude/settings.local.json` at **≥ 0.14.0** (see [Claude Code hooks live in `.claude/settings.local.json`](#claude-code-hooks-live-in-claudesettingslocaljson-olakai-cli--0140)). To upgrade, first run `olakai --version`. If it prints 0.x, ask the user, then run `npm install -g olakai-cli@latest` after they say yes. If it prints 1.x (standalone or npm `@next`), do not run `npm install -g olakai-cli@latest`: it downgrades to 0.15.1. Run `olakai update` instead, after the user says yes. The standalone binary (beta, 1.0.0-beta.4) has every command and flag of the npm CLI, so it meets these minimums. It adds `monitor install-hooks` and `olakai update`, and its `admin monitor bulk-provision` writes home-folder key files instead of the npm per-repo bundle. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 >
 > Since **olakai-cli 0.13.0**, every monitored event also reports the CLI version that produced it — no action needed, but it helps diagnose version drift across machines.
 
@@ -123,7 +124,9 @@ Only Claude Code changed. Codex, Cursor, Gemini CLI and Antigravity write to `~/
 
 > ⚠️ **Unattributed activity caveat (Codex / Cursor / Gemini CLI / Antigravity).** Because Codex, Cursor, Gemini CLI, and Antigravity install hooks **globally**, their hook fires in *every* workspace — including ones you never ran `olakai monitor init` in. When the hook fires in a workspace that has **no** `.olakai/monitor-<tool>.json`, it **silently exits** and that session is **NOT attributed to any agent** (no event is sent). This is expected: a global hook with no local linkage has nowhere to report. If you expect Codex/Cursor/Gemini CLI/Antigravity activity from a repo and see none, the most common cause is that you never ran `olakai monitor init --tool <tool>` *in that repo*. Run `olakai monitor list` to see exactly which workspaces are linked, and `olakai monitor doctor --tool <tool>` for an explanation in context.
 >
-> Claude Code does **not** have this caveat — its hooks are workspace-scoped, so they only fire where you installed them.
+> Claude Code does **not** have this caveat — its hooks are workspace-scoped, so they only fire where you installed them (except after `olakai monitor install-hooks`, which installs them user-wide).
+>
+> **Exception: home key file (1.0.0-beta.4+).** When `~/.olakai/monitor-<tool>.json` exists (a bulk-provisioned machine), a workspace with no `.olakai` config reports with that home key instead of exiting. See [How the hook finds its key](#how-the-hook-finds-its-key-100-beta4).
 
 ## Self-healing: diagnose and repair your own monitoring
 
@@ -181,40 +184,81 @@ You can install monitoring for **multiple tools** in the same workspace — each
 
 ## Admin: zero-touch fleet rollout (bulk-provision)
 
-`olakai monitor init` is the right path for a **single developer** setting up their own machine interactively. If you are an Olakai **ADMIN** rolling out Claude Code monitoring to a whole team — pushing configs through Intune or another device-management tool, with no action required from each developer — use bulk-provision instead (**olakai-cli ≥ 0.13.0**, ADMIN role required):
+`olakai monitor init` is the right path for a **single developer** setting up their own machine interactively. If you are an Olakai **ADMIN** rolling out monitoring to a whole team, with no action from each developer, use bulk-provision instead. You push the key files with Intune, Jamf, Group Policy, or another device-management (MDM) tool.
+
+> **Version requirement.** The fleet flow below (Claude Code, Codex and Cursor, home layout, `install-hooks`, home key-file lookup) needs the **standalone CLI 1.0.0-beta.4 or later** (beta) on the admin machine **and** on every developer machine. No stable npm release supports it: npm `olakai-cli` stays at 0.15.1. npm also publishes the beta as `olakai-cli@next`. Install the beta only through `/olakai-get-started`, which asks the user to confirm the beta first. Always check `olakai --version` and read the number. An npm `olakai` must not come first on the `PATH`.
 
 ```bash
 olakai admin monitor bulk-provision \
   --emails roster.txt \
   --out ./bundles \
-  [--tool claude-code] [--rotate-existing-keys] [--name-prefix "Prefix "] [--json] [--yes]
+  [--tool claude-code,codex,cursor] [--rotate-existing-keys] [--name-prefix "Prefix "] [--json] [--yes]
 ```
 
-- `--emails` accepts `.txt` or `.csv` — one email per line (or first CSV column), `#` comments allowed, a header row is auto-skipped, emails are deduped case-insensitively, max 500 per run.
-- `--tool` — v1 supports `claude-code` **only**. Codex, Cursor, Gemini CLI, and Antigravity keep hooks in global per-machine files, so per-repo pushable bundles aren't possible for them.
+- `--emails` accepts `.txt` or `.csv`: one email per line (or first CSV column), `#` comments allowed, a header row is auto-skipped, emails are deduped case-insensitively, max 500 per run.
+- `--tool` takes a comma-separated list of `claude-code`, `codex` and `cursor`. The default is `claude-code`. Gemini CLI and Antigravity are not part of bulk provisioning.
 
-**What it does — per email in the roster:**
-1. Resolves or creates an EMPLOYEE user on your account
-2. Creates a Claude Code agent **owned by that developer** (`creatorUserId`), so Coding IQ attribution is per-developer
-3. Mints an SDK key
-4. Writes a device-management-ready bundle under `<out>/<localpart>/`: `.claude/settings.local.json` (hook block, **≥ 0.14.0**; bundles from 0.13.0 carried `.claude/settings.json`) and `.olakai/monitor-claude-code.json` (agentId / apiKey / monitoringEndpoint, mode 0600) — push both into the target repo/home layout. A `keymap.json` / `keymap.csv` (0600) at the out root maps emails → agents → keys.
+**What it does, per email and per tool:**
 
-> **Why `settings.local.json` in the bundle matters at rollout scale.** The bundle is pushed onto developer machines by device management, and how the bundled file meets an existing file on disk is the MDM tool's behaviour, not the CLI's. Most push mechanisms overwrite, so a bundled `.claude/settings.json` can replace whatever the team tracks in git on each machine it lands on. Check what your own tool does. `settings.local.json` sidesteps the question: it is personal and gitignored, so the push adds the hooks without landing on the team's tracked file at all.
->
-> **Already rolled out 0.13.0 bundles?** Confirm your admin machine is on 0.14.0 (`olakai --version`), re-run bulk-provision, and push the new bundles. Alternatively, have each developer confirm **their own** `olakai --version` is 0.14.0 or later and then run `olakai monitor doctor --tool claude-code --fix`. A developer still on 0.13.0 gets a green `--fix` that leaves the hooks in `.claude/settings.json`, so the fleet-wide report would say migrated when it is not. See the version guard above.
+1. Resolves or creates an EMPLOYEE user on your account.
+2. Creates an agent **owned by that developer** (`creatorUserId`), named `<tool>-<email-localpart>` (or `<prefix>-<localpart>` with `--name-prefix`), so Coding IQ attribution is per developer.
+3. Mints an SDK key.
+4. Writes a **home layout** bundle: `<out>/<developer>/.olakai/monitor-<tool>.json` (agentId, apiKey, monitoringEndpoint, mode 0600). The bundle has **no** agent settings files. A pushed settings file would replace the developer's own Claude Code, Codex or Cursor settings. `keymap.json` / `keymap.csv` (0600) at the out root have one row per (email, tool), with a trailing `tool` column. Parse them by header name. With `--json`, the output also has `summaryByTool` with the counts per tool.
 
 Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision` endpoint on **your own instance** (SaaS or on-prem), in chunks of 100 emails (server rate limit: 10 requests / 120s per admin).
 
-**Key semantics — read before re-running:**
-- Plaintext keys are returned **only at creation or rotation**. On a re-run, existing developers come back as `reused` with **no key and no bundle** — this is deliberate, so re-runs are safe for already-deployed devices.
-- `--rotate-existing-keys` revokes and remints keys for existing developers — this **invalidates configs already deployed** to their devices. Only use it when you intend to redeploy the fresh bundles.
-- The command exits non-zero if any row fails. If a run aborts mid-way on a rate limit, unattempted emails are written to `<out>/unprocessed.txt` — re-run with that file as the roster.
+**Key semantics. Read before re-running:**
 
-**Deployment gotchas:**
-1. Target machines must also have the CLI installed: `olakai-cli` from npm, or the standalone binary (beta). The pushed hooks run `olakai monitor hook ...`.
-2. Pushed bundles do **not** appear in `olakai monitor list` / `doctor` on the target machine until the developer runs any `olakai monitor` command once (the registry reconcile backfills them). The hooks fire and report fine regardless — this only affects local visibility tooling.
+- Plaintext keys are returned **only at creation or rotation**. On a re-run, existing developers come back as `reused` with **no key and no key file**. This is deliberate, so re-runs are safe for already-deployed devices.
+- `--rotate-existing-keys` revokes and remints keys for existing developers, for every selected tool. This **invalidates the key files already deployed** to their devices. Only use it when you intend to push the new files.
+- The command exits non-zero if any row fails. If a run stops partway (for example on a rate limit), it still writes the bundles it has, and writes the unattempted emails to `<out>/unprocessed.txt`. Re-run with that file as the roster and a fresh `--out`, without `--rotate-existing-keys`, or you rotate keys this run already wrote.
+- Delete the local bundles after you load them into the MDM tool. They hold live API keys.
 
-**Prefer a UI?** The same capability exists in the dashboard: **Coding IQ → Settings → Bulk Provisioning** (paste or upload emails → download the key-map CSV + a ZIP of bundles).
+**Push to each device (MDM recipe):**
+
+1. **Install the CLI** (1.0.0-beta.4 or later) in a machine-wide `PATH` location, for example `/usr/local/bin` or `C:\Program Files\Olakai`. The hooks run `olakai monitor hook ...`. Codex hooks need Codex 0.124.0 or later.
+2. **Copy the key files, owned by the developer.** Copy the developer's `.olakai` folder to `C:\Users\<user>\.olakai\`, `/Users/<user>/.olakai/` or `/home/<user>/.olakai/`. Do not use `~` in a root script: it expands to root's home. On macOS and Linux, `chown -R <user>` the folder, `chmod 700` the folder and `chmod 600` the files. Windows needs no owner fix: the user profile ACL is enough.
+3. **Run `olakai monitor install-hooks` as the logged-on developer**, never as root or SYSTEM. Intune: set "Run this script using the logged-on credentials" to Yes. macOS/Linux from a root script: `sudo -H -u <user> olakai monitor install-hooks`. See [What `install-hooks` does](#what-install-hooks-does).
+4. **Proxy exception.** Behind a TLS-inspecting proxy, add the Olakai instance host to `NO_PROXY` as a machine environment variable. The tools see a new machine variable only after a restart or a new sign-in.
+
+MDM scripts do not load the developer's shell profile. If `CLAUDE_CONFIG_DIR` or `CODEX_HOME` is set only in `.zshrc`, `.bashrc` or a PowerShell profile, set it in the script too.
+
+**Claude Code alternative: managed settings.** For Claude Code only, you can push the `Stop` and `SubagentStop` hooks (`olakai monitor hook stop`, `olakai monitor hook subagent-stop`) through Claude Code managed settings instead of step 3: `C:\Program Files\ClaudeCode\managed-settings.json` or the registry key `HKLM\SOFTWARE\Policies\ClaudeCode` (`REG_SZ` value `Settings`) on Windows, `/Library/Application Support/ClaudeCode/managed-settings.json` on macOS, `/etc/claude-code/managed-settings.json` on Linux. Steps 1, 2 and 4 still apply. Pick one Claude Code hook method per machine. Then run `install-hooks` for the other tools only: `olakai monitor install-hooks --tool codex,cursor`.
+
+### What `install-hooks` does
+
+`olakai monitor install-hooks [--tool claude-code,codex,cursor]` runs on the device, as the developer:
+
+- **Offline and safe to repeat.** No login, no network, no update check. A second run changes nothing.
+- **Default tools:** every tool that has a `~/.olakai/monitor-<tool>.json`. Use `--tool` to choose.
+- **Merges, never replaces.** It adds the Olakai hooks to `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`), `~/.codex/config.toml` (or `$CODEX_HOME/config.toml`) and `~/.cursor/hooks.json`, and keeps every other setting.
+- **Unparseable file:** it leaves that file untouched, names it on stderr, installs the other tools, and exits 1.
+- **Codex:** it refuses (exit 1, file untouched) a `config.toml` that already has a `[hooks]` table and contains comments. Merge that file by hand. It warns when `[features] hooks = false` turns hooks off, and never changes that setting.
+- **Ownership:** it refuses to run when the home folder or `~/.olakai` is owned by another user (for example a root script pointed at the developer's home), or when the home is a Windows SYSTEM profile. A developer who is root in a dev container, with a home root owns, is allowed. The owner check runs on macOS and Linux only; on Windows the CLI checks only for the SYSTEM profile, not file owners.
+
+### How the hook finds its key (1.0.0-beta.4+)
+
+The hook walks up from the workspace folder looking for `.olakai/monitor-<tool>.json`. When no workspace has one, it uses `~/.olakai/monitor-<tool>.json`. A workspace config always wins, also for Cursor multi-root workspaces. `olakai monitor status --tool <tool>`, `doctor` and `repair` print `Using home key file <path>` on stderr when the home file is in use. Run it from a project folder, not the home folder. From the home folder, status reports the home config directly and prints no such line.
+
+So on a bulk-provisioned machine the [unattributed activity caveat](#scope-is-honest-per-tool) does not apply: a global Codex or Cursor hook in a workspace with no `.olakai` config reports with the home key.
+
+**Root == home is user scope.** When the monitored root is the home folder, the Claude Code hooks belong in `~/.claude/settings.json` (Claude Code does not read `settings.local.json` at user level). On 1.0.0-beta.4+, `init`, `doctor --fix`, `repair` and `disable` keep them there and never move them to `settings.local.json`. `doctor --fix` is safe on these machines. On npm 0.x it is not: 0.x treats `~/.claude/settings.json` as the legacy file and moves the hooks where Claude Code never reads them.
+
+**Deployment checks:**
+
+1. As the developer, run `olakai monitor status --tool <tool>`. It prints `Using home key file ...` on stderr when the hook will use the home key. Run it from a project folder, not the home folder. From the home folder, status reports the home config directly and prints no such line.
+2. Start a **real session** in the tool and check the event in the dashboard (Golden Rule). Do not validate with a hand-written `curl` to `/api/monitoring/prompt`: it can return 200 and still be dropped by the pipeline.
+3. For a machine that does not report, use `/olakai-monitor-doctor` (see its bulk-provisioned machines checklist).
+
+**Offboarding a developer:** delete the agents (or their keys) in Olakai. On the machine, delete `~/.olakai/monitor-*.json` (the hooks then send nothing). `olakai monitor disable --tool <tool>` run from the home folder removes that tool's hooks and deletes the home key file unless you pass `--keep-config`.
+
+**Prefer a UI?** The same capability exists in the dashboard: **Coding IQ → Coding IQ Settings → Bulk Provisioning**. On instances that include the multi-tool bulk provisioning UI (localnode-app with OLA-1596), Claude Code, Codex CLI and Cursor are selected by default. Download the key-map CSV and the bundles ZIP. The ZIP uses the same home layout and has a `README.txt` with the device recipe. Older instances offer Claude Code only and produce the per-repo bundle.
+
+### npm 0.13 to 0.15.1 bundles (per-repo, Claude Code only)
+
+This is legacy guidance for admins still on npm `olakai-cli` 0.13 to 0.15.1. Those releases support `--tool claude-code` **only** and write a per-repo bundle under `<out>/<localpart>/`: `.claude/settings.local.json` (hook block, **≥ 0.14.0**; 0.13.0 wrote `.claude/settings.json`) plus `.olakai/monitor-claude-code.json`. You push both into the target repo layout. Pushed bundles appear in `olakai monitor list` / `doctor` only after any `olakai monitor` command runs once on the machine (registry reconcile). The hooks report fine regardless.
+
+> **Already rolled out 0.13.0 bundles?** Most push mechanisms overwrite, so a bundled `.claude/settings.json` can replace the team's tracked file. Confirm your admin machine is on 0.14.0 or later (`olakai --version`), re-run bulk-provision, and push the new bundles. Or have each developer confirm **their own** `olakai --version` is 0.14.0 or later and then run `olakai monitor doctor --tool claude-code --fix`. A developer still on 0.13.0 gets a green `--fix` that leaves the hooks in `.claude/settings.json`. For a new rollout, prefer the 1.0.0-beta.4 home layout above.
 
 ## Quick Setup — Claude Code
 
@@ -567,7 +611,7 @@ olakai monitor disable --tool antigravity
 ```
 
 **What this does:**
-- Removes the registered hooks from the tool's settings file. For Claude Code on **≥ 0.14.0** that is `.claude/settings.local.json`. A `.claude/settings.json` that holds no Olakai hooks is left byte-identical.
+- Removes the registered hooks from the tool's settings file. For Claude Code on **≥ 0.14.0** that is `.claude/settings.local.json`. A `.claude/settings.json` that holds no Olakai hooks is left byte-identical. Run from the home folder on 1.0.0-beta.4+, it removes the user-level hooks from `~/.claude/settings.json` (and `~/.claude/settings.local.json`) and deletes the home key file unless you pass `--keep-config`.
 - Removes the corresponding `monitor-claude-code.json` / `monitor-codex.json` / `monitor-cursor.json` / `monitor-gemini-cli.json` / `monitor-antigravity.json` (and any legacy `.claude/olakai-monitor.json`)
 - Removes this workspace's entry from the machine registry (`~/.olakai/registry.json`)
 
@@ -586,7 +630,7 @@ To re-enable, run `olakai monitor init --tool <tool>` again.
 
 This usually means the transcript file at `transcript_path` (Claude Code) or the equivalent for Codex/Cursor could not be read or parsed. Common causes:
 
-- CLI version too old. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command)
+- CLI version too old. Run `olakai --version` first. On 0.x, ask the user, then run `npm install -g olakai-cli@latest` after they say yes. On 1.x (standalone or npm `@next`), do not run it: it downgrades to 0.15.1. Run `olakai update` instead.
 - Tool version too old — Codex must be ≥ `0.124.0`, Cursor must be ≥ `1.7`
 - Transcript file moved or deleted between turn end and hook firing
 - Transcript format changed in a newer tool version
@@ -656,8 +700,10 @@ olakai monitor init --tool cursor                # Cursor (>= 1.7, hooks beta, g
 olakai monitor init --tool gemini-cli            # Gemini CLI (>= 0.26.0, global hooks)
 olakai monitor init --tool antigravity           # Antigravity CLI (recent agy w/ hooks, validated 1.0.4, global hooks)
 
-# Admin: zero-touch fleet rollout (ADMIN role, olakai-cli >= 0.13.0, v1 claude-code only)
-olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
+# Admin: zero-touch fleet rollout (ADMIN role, standalone CLI >= 1.0.0-beta.4)
+olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code,codex,cursor] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
+olakai monitor install-hooks [--tool claude-code,codex,cursor]   # on each device, as the developer; offline, idempotent
+# npm 0.13-0.15.1: bulk-provision supports --tool claude-code only (per-repo bundle), no install-hooks
 
 # See what's monitored (two lenses)
 olakai monitor list                              # MACHINE: everything on this box + drift flags

@@ -46,7 +46,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.20.1)
+│       │   └── plugin.json       # Plugin metadata (version 1.21.0)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -495,18 +495,39 @@ olakai profile --recommendations [--json]                # Growth edge + setup l
 
 # Local Coding Agent Monitoring (hooks-based)
 olakai monitor init --tool claude-code|codex|cursor|gemini-cli|antigravity      # Install hooks for the chosen tool
-olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
-                                                         # ADMIN, >= 0.13.0: zero-touch fleet rollout. Per roster email:
-                                                         #   resolve-or-create EMPLOYEE user, create developer-owned agent,
-                                                         #   mint SDK key, write Intune-ready bundle <out>/<localpart>/
-                                                         #   (.claude/settings.local.json + .olakai/monitor-claude-code.json;
-                                                         #    settings.local.json since 0.14.0, .claude/settings.json before)
-                                                         #   + keymap.json/csv at the out root. Plaintext keys ONLY at
-                                                         #   creation/rotation; re-runs return existing devs as "reused"
-                                                         #   (no key, no bundle). v1 supports --tool claude-code ONLY.
-                                                         #   Target machines still need the CLI installed (npm or standalone beta);
-                                                         #   pushed bundles appear in monitor list/doctor only after any
-                                                         #   olakai monitor command runs once there (registry reconcile).
+olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code,codex,cursor] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
+                                                         # ADMIN, standalone CLI >= 1.0.0-beta.4: zero-touch fleet rollout.
+                                                         #   Per (roster email, tool): resolve-or-create EMPLOYEE user,
+                                                         #   create developer-owned agent, mint SDK key. --tool is a comma
+                                                         #   list (default claude-code). Home layout bundle ONLY:
+                                                         #   <out>/<dev>/.olakai/monitor-<tool>.json (0600), no agent
+                                                         #   settings files. keymap.json/csv: one row per (email, tool),
+                                                         #   trailing `tool` column; --json adds summaryByTool. Plaintext
+                                                         #   keys ONLY at creation/rotation; re-runs return "reused"
+                                                         #   (no key, no key file).
+                                                         # npm 0.13-0.15.1 (stable): --tool claude-code ONLY, per-repo bundle
+                                                         #   (.claude/settings.local.json since 0.14.0, .claude/settings.json in
+                                                         #   0.13.0, + .olakai/monitor-claude-code.json). Registry entry appears
+                                                         #   only after any olakai monitor command runs once on the machine.
+olakai monitor install-hooks [--tool claude-code,codex,cursor]
+                                                         # Standalone >= 1.0.0-beta.4. Run ON THE DEVICE AS THE DEVELOPER
+                                                         #   (never root/SYSTEM). Offline, no login, idempotent. Merges hooks
+                                                         #   into ~/.claude/settings.json ($CLAUDE_CONFIG_DIR), ~/.codex/config.toml
+                                                         #   ($CODEX_HOME), ~/.cursor/hooks.json. Default tools: those with
+                                                         #   ~/.olakai/monitor-<tool>.json. Unparseable file: left untouched,
+                                                         #   others installed, exit 1. Refuses a Codex config.toml whose existing
+                                                         #   [hooks] table has comments, and a home or ~/.olakai owned by another
+                                                         #   user or a Windows SYSTEM profile. Codex >= 0.124.0.
+                                                         #   Claude Code managed settings can hold the Claude hooks instead;
+                                                         #   then run install-hooks --tool codex,cursor.
+# Hook key lookup (>= 1.0.0-beta.4): walk up from the workspace for .olakai/monitor-<tool>.json, then
+# ~/.olakai/monitor-<tool>.json. A workspace config wins (Cursor multi-root too). status/doctor/repair print
+# "Using home key file <path>" on stderr, only when run from a project folder, not the home folder (from home,
+# status reports the home config directly and prints no such line). Root == home is USER scope: init, doctor --fix, repair and disable keep the
+# Claude hooks in ~/.claude/settings.json (no migration to settings.local.json, which Claude Code does not read
+# at user level). doctor --fix is safe there on 1.0.0-beta.4+; npm 0.x moves them to the inert file.
+# Behind a TLS-inspecting proxy add the instance host to NO_PROXY; tools see a machine env var only after a
+# restart or new sign-in.
 olakai monitor status --tool claude-code|codex|cursor|gemini-cli|antigravity    # Verify hook + config installation
 olakai monitor disable --tool claude-code|codex|cursor|gemini-cli|antigravity   # Remove hooks and local config
 olakai monitor hook <event> --tool claude-code|codex|cursor|gemini-cli|antigravity  # Internal hook invoker (called by the registered hook command)
@@ -634,7 +655,7 @@ Two consequences when editing it:
 
 ### Never ship an Olakai monitoring hook from this repo
 
-> ⚠️ **Do not add a `Stop` / `SubagentStop` handler that runs `olakai monitor hook ...` to this plugin, to a skill, or to `hooks/`.** `olakai monitor init` owns those hooks and writes them to `.claude/settings.local.json`.
+> ⚠️ **Do not add a `Stop` / `SubagentStop` handler that runs `olakai monitor hook ...` to this plugin, to a skill, or to `hooks/`.** `olakai monitor init` owns those hooks and writes them to `.claude/settings.local.json`. On fleet machines `olakai monitor install-hooks` writes the same handlers to `~/.claude/settings.json`.
 >
 > This is not a style rule. Claude Code deduplicates identical hook handlers **within** the settings files, so the CLI's own block appearing in two settings files still runs once. A handler delivered by a **plugin or skill** is documented as staying separate and is **not** deduplicated against a settings-file copy. Ship one here and it runs alongside the developer's `settings.local.json` copy even when byte-identical, so every turn reports twice and their Coding IQ numbers double.
 >
@@ -676,11 +697,11 @@ The authoritative source for current published SDK/CLI versions is:
 - TypeScript SDK: `@olakai/sdk` v2.3.0
 - Python SDK: `olakai-sdk` v1.3.0 (PyPI)
 - CLI: `olakai-cli` 0.15.1 (npm, stable). Install: `npm install -g olakai-cli`. Needs Node.js 20+.
-- CLI: 1.0.0-beta.1 (standalone, beta). A single native binary, no Node.js required. Same commands, flags and config files as the npm CLI. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. Install and update steps live in `olakai-get-started` only. Always call it beta.
+- CLI: 1.0.0-beta.4 (standalone, beta; get.olakai.ai, Homebrew, Scoop, or npm `olakai-cli@next`). A single native binary, no Node.js required. It has every command and flag of the npm CLI and the same config files. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. It adds `monitor install-hooks` and `olakai update`, and its `admin monitor bulk-provision` writes home-folder key files instead of the npm per-repo bundle. On 1.x never run `npm install -g olakai-cli@latest` (downgrades to 0.15.1); use `olakai update`. Install and update steps live in `olakai-get-started` only. Always call it beta.
 
 > **Note**: Both SDKs now auto-capture `modelName` from LLM responses and the platform uses model-based pricing for execution cost calculation.
 
-> **CLI feature minimums.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` require **olakai-cli ≥ 0.7.0**. `olakai profile` requires **≥ 0.10.0**, and its `--setup` / `--recommendations` flags require **≥ 0.14.0**. `olakai admin monitor bulk-provision` requires **≥ 0.13.0** (which also added CLI version telemetry: every monitored event reports the CLI version that produced it — OLA-501).
+> **CLI feature minimums.** `olakai monitor list`, `olakai monitor doctor [--fix]`, `olakai monitor repair`, and `olakai agents mine|archive|rename` require **olakai-cli ≥ 0.7.0**. `olakai profile` requires **≥ 0.10.0**, and its `--setup` / `--recommendations` flags require **≥ 0.14.0**. `olakai admin monitor bulk-provision` requires **≥ 0.13.0** (Claude Code only; the multi-tool fleet flow and `olakai monitor install-hooks` need the standalone **1.0.0-beta.4**). 0.13.0 also added CLI version telemetry: every monitored event reports the CLI version that produced it (OLA-501).
 
 When SDK or CLI releases occur, verify that code examples in SKILL.md files are compatible with the new version.
 

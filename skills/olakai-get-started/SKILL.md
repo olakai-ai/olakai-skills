@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.1"
+  version: "1.18.2"
 ---
 
 # Get Started with Olakai
@@ -129,7 +129,7 @@ There are two ways to install it:
 | Option | Version | Needs Node.js | Status |
 |--------|---------|---------------|--------|
 | npm (default) | 0.15.1 | Yes, Node.js 20+ | Stable |
-| Standalone binary | 1.0.0-beta.1 | No | **Beta** |
+| Standalone binary | 1.0.0-beta.4 | No | **Beta** |
 
 Use npm when Node.js 20+ is available. Offer the standalone beta only when Node.js is not available, or when the user says they cannot install it.
 
@@ -167,7 +167,7 @@ This installs `olakai-cli` 0.15.1, the stable CLI. It requires Node.js 20+.
 
 ### 2.3 Standalone binary (beta, no Node.js required)
 
-> **This is a beta.** Ask the user to confirm they want the beta before you install it. Do not run the install script or any package manager command until they say yes. Do not call it stable or production-ready. Version 1.0.0-beta.1 is a single native binary. It is the same `olakai` command, with the same commands, flags and config files as the npm CLI. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass.
+> **This is a beta.** Ask the user to confirm they want the beta before you install it. Do not run the install script or any package manager command until they say yes. Do not call it stable or production-ready. Version 1.0.0-beta.4 is a single native binary. It is the same `olakai` command, with every command and flag of the npm CLI and the same config files. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. It adds `monitor install-hooks` and `olakai update`, and its `admin monitor bulk-provision` writes home-folder key files instead of the npm per-repo bundle. See `/olakai-monitor-local-coding-agent`.
 
 Ask the user which method they want: the install script, Homebrew, or Scoop. Show only the methods for their OS. Do not choose one for them.
 
@@ -197,9 +197,15 @@ scoop bucket add olakai https://github.com/olakai-ai/scoop-bucket
 scoop install olakai/olakai-beta
 ```
 
+**npm `@next` (beta, needs Node.js 20+):** npm publishes the same beta as `olakai-cli@next`. The same beta-confirm rule applies. Offer it only when the user asks for the beta through npm.
+
+```bash
+npm install -g olakai-cli@next
+```
+
 Supported targets for the beta: macOS (Apple silicon and Intel), Linux (x86_64 and arm64), and Windows (x86_64).
 
-**Updating the beta:** the standalone beta's `olakai update` prints the right update command for how you installed it. It does not replace itself. Ask the user before you run any update command below. The npm CLI has no `update` command. npm users update with `npm install -g olakai-cli`. The update commands are:
+**Updating the beta:** ask the user before you run any update. On 1.0.0-beta.3 and later, `olakai update` finds how the binary was installed. For an install-script binary it downloads the new version and replaces itself. For Homebrew (and npm `@next`) it asks, then runs the package manager command. On Windows (Scoop, winget, npm) it only prints the command, because a running olakai.exe cannot be replaced. Older betas only print the command. The npm CLI (0.x) has no `update` command. npm users update with `npm install -g olakai-cli`. The manual update commands are:
 
 - Install script: re-run the same command. It replaces the binary in place.
 
@@ -209,6 +215,7 @@ Supported targets for the beta: macOS (Apple silicon and Intel), Linux (x86_64 a
 
 - Homebrew: `brew upgrade olakai-beta`
 - Scoop: `scoop update olakai-beta`
+- npm `@next`: `npm install -g olakai-cli@next`
 
 The "update available" notice compares against the latest **stable** version. It does not tell beta users about a newer beta.
 
