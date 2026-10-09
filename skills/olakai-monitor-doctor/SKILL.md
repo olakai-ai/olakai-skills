@@ -10,12 +10,14 @@ description: |
   from Claude Code / Codex / Cursor, is monitoring on / working, check my olakai
   monitoring, what's monitored on this machine, monitor doctor, monitor repair,
   monitor list, fix my monitoring, my monitored agent disappeared / 404, hooks
-  stopped firing, re-link my monitoring key.
+  stopped firing, re-link my monitoring key, bulk-provisioned machine not
+  reporting, install-hooks failed, using home key file.
   TRIGGER KEYWORDS: olakai monitor doctor, olakai monitor repair, olakai monitor
   list, monitor not working, no events claude code, no events codex, no events
   cursor, fix monitoring, repair monitoring, agent 404, agent missing, hooks
   stopped firing, drift, registry, agents mine, where am i monitoring, is my
-  monitoring working, self-heal monitoring.
+  monitoring working, self-heal monitoring, install-hooks, home key file,
+  fleet machine, mdm.
   DO NOT load for: first-time setup of a coding tool (use
   olakai-monitor-local-coding-agent), instrumenting your own agent's SDK code
   (use olakai-integrate), generic SDK / KPI / event troubleshooting unrelated to
@@ -23,7 +25,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.20.1"
+  version: "1.21.0"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -32,7 +34,7 @@ This skill diagnoses and repairs **already-installed** hooks-based monitoring fo
 
 > **First-time setup?** Use `olakai-monitor-local-coding-agent` instead — it covers `init`, what each tool captures, and KPI configuration. This skill is the **repair** half.
 
-> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update` to see their command). The standalone binary (beta, 1.0.0-beta.1) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
+> **CLI requirement:** `monitor list`, `monitor doctor`, `monitor repair`, and `agents mine` require **olakai-cli ≥ 0.7.0**. Older CLIs only have `init` / `status` / `disable`. To upgrade, ask the user, then run `npm install -g olakai-cli@latest` after they say yes (npm installs only; standalone beta users run `olakai update`). The standalone binary (beta, 1.0.0-beta.4) has the same commands and flags, so it meets these minimums. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. For install options without Node.js, see `/olakai-get-started`.
 
 ## Check your CLI version before migrating
 
@@ -104,7 +106,22 @@ olakai agents mine --source codex --json
 >
 > Before 0.14.0, doctor reported a legacy install as `ok` rather than `warn`, because `.claude/settings.json` was then the correct location. Upgrade, confirm with `olakai --version`, and re-run `olakai monitor doctor --tool claude-code`.
 
-> **Admin bulk-provisioned machines (olakai-cli ≥ 0.13.0):** bundles pushed by an admin via `olakai admin monitor bulk-provision` (or the Coding IQ → Settings → Bulk Provisioning UI) write the hooks and `.olakai/monitor-claude-code.json` directly, so the workspace is **not in the local registry** until the developer runs any `olakai monitor` command once — the registry reconcile then backfills it. Hooks fire and events flow regardless. A `registry-entry` FAIL (or the workspace missing from `monitor list`) on such a machine is expected, not broken — running `olakai monitor doctor --tool claude-code --fix` adopts it.
+## Bulk-provisioned machines (home layout, 1.0.0-beta.4+)
+
+An admin can push key files to `~/.olakai/monitor-<tool>.json` with an MDM tool and install the hooks with `olakai monitor install-hooks` (see `/olakai-monitor-local-coding-agent`, admin fleet rollout). These machines have no workspace `.olakai` folder. The hooks walk up from the workspace for `.olakai/monitor-<tool>.json`, then fall back to the home key file. A workspace config always wins.
+
+When such a machine sends no events, check these in order, as the logged-on developer:
+
+1. **CLI version.** `olakai --version` must print **1.0.0-beta.4 or later**. npm 0.x has no home key-file lookup and no `install-hooks`. If `which -a olakai` (or `where.exe olakai`) lists an npm copy first on the `PATH`, that copy runs the hooks.
+2. **Key file.** `~/.olakai/monitor-<tool>.json` exists for the tool and parses. `olakai monitor status --tool <tool>` prints `Using home key file <path>` when the hook will use it. No such line and no workspace config means the hook has no key.
+3. **Ownership.** The home folder and `~/.olakai` must be owned by the developer. A root or SYSTEM copy step that did not `chown` the files breaks this. `status` warns and `doctor` fails a `home-owner` check. Fix the owner (`chown -R <user>` the folder, `chmod 700` the folder, `chmod 600` the files), not the check.
+4. **Hooks installed by the developer.** `olakai monitor install-hooks` must run as the logged-on developer, not as root or SYSTEM. It refuses when the home or `~/.olakai` is owned by another user, or when the home is a Windows SYSTEM profile. Re-running it is safe. If it exits 1, read stderr: it names a file it could not parse, or a Codex `config.toml` with a `[hooks]` table and comments that must be merged by hand. Codex needs 0.124.0 or later. If Claude Code hooks come from managed settings instead, `install-hooks --tool codex,cursor` is expected.
+5. **Proxy.** Behind a TLS-inspecting proxy, the Olakai host must be in `NO_PROXY`. A new machine environment variable reaches the tools only after a restart or a new sign-in.
+6. **Real session.** Start a real session in the tool, then check the event in the dashboard.
+
+**User scope (root == home).** Here the Claude Code hooks belong in `~/.claude/settings.json` (or `$CLAUDE_CONFIG_DIR/settings.json`), not `settings.local.json`: Claude Code does not read `settings.local.json` at user level. On 1.0.0-beta.4+, `init`, `doctor --fix`, `repair` and `disable` keep them in `~/.claude/settings.json`, so `doctor --fix` is safe. Do not run `doctor --fix` on these machines with npm 0.x: it moves the hooks to `~/.claude/settings.local.json`, where Claude Code never reads them. The `.claude/settings.local.json` migration and gitignore warnings above apply to repositories, not to the home folder.
+
+**npm 0.13 to 0.15.1 bundles (per-repo, Claude Code only).** Those releases push `.claude/settings.local.json` and `.olakai/monitor-claude-code.json` into a repository. The workspace is **not in the local registry** until the developer runs any `olakai monitor` command once. The registry reconcile then backfills it. Hooks fire and events flow regardless. A `registry-entry` FAIL (or the workspace missing from `monitor list`) on such a machine is expected, not broken. `olakai monitor doctor --tool claude-code --fix` adopts it.
 
 ## Decision tree
 
@@ -198,7 +215,7 @@ Hooks installed by olakai-cli **0.13.0 or earlier** sit in `.claude/settings.jso
 Ask the user before you run the upgrade on the first line. Run it only after they say yes.
 
 ```bash
-npm install -g olakai-cli@latest                 # npm installs only; standalone beta users run `olakai update` to see their command
+npm install -g olakai-cli@latest                 # npm installs only; standalone beta users run `olakai update`
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
 olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
 ```
