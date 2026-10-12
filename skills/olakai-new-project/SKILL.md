@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.1"
+  version: "1.12.2"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -308,7 +308,7 @@ Templates are a great starting point. You can always add custom formula-based KP
 
 #### Execution Cost (Model-Based Pricing)
 
-> **Execution Cost is now automatically calculated using model-based pricing.** The SDK sends `modelName` as a top-level field (auto-extracted from LLM responses), and the platform resolves the cost per token based on the model used (e.g., GPT-4o, Claude Sonnet). If the model is not recognized, a fallback rate of $5/1M tokens is applied. You do not need to manually configure cost-per-token for recognized models.
+> **Execution Cost is now automatically calculated using model-based pricing.** The SDK sends `modelName` as a top-level field (auto-extracted from LLM responses), and the platform resolves the cost per token based on the model used (e.g., GPT-4o, Claude Sonnet). If the model is not recognized, a fallback rate of \$5/1M tokens is applied. You do not need to manually configure cost-per-token for recognized models.
 
 #### Auto-Provisioned Metric Slot KPIs
 
@@ -342,7 +342,7 @@ olakai kpis create --name "Time Saved" \
 **Configuring Assumptions for meaningful metrics:**
 1. Navigate to your agent in the Olakai dashboard
 2. Open the **Assumptions** panel on the agent detail page
-3. Set the FTE hourly cost to match your organization's rate (default: $55/hour)
+3. Set the FTE hourly cost to match your organization's rate (default: \$55/hour)
 4. Set the token cost rate if needed
 5. Slot KPI values will update on subsequent events
 

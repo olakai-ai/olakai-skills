@@ -21,6 +21,16 @@ echo ""
 ./scripts/validate-descriptions-selftest.sh || status=1
 
 echo ""
+# Skill bodies: `$0`/`$1` in prose are replaced by the skill's own arguments at
+# invoke time, so currency has to be escaped (OLA-1611).
+./scripts/validate-arg-substitution.sh || status=1
+echo ""
+# …and its gate has a gate: the fixtures cover the two spellings a reviewer
+# will assume are inert — an inline code span and a fenced block — plus the
+# escaped forms it must stay silent on.
+./scripts/validate-arg-substitution-selftest.sh || status=1
+
+echo ""
 echo "=== Verifying symlinks ==="
 for link in plugins/olakai/skills/*/; do
   link="${link%/}"

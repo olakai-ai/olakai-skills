@@ -21,7 +21,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.3"
+  version: "1.1.4"
 ---
 
 # Tune My Setup
@@ -102,7 +102,7 @@ The one thing you may still do: offer to show them the pattern and lever catalog
 
 - `rate: null` means the signal was **never observable**. Say "unobserved". It is not 0%.
 - `meanScore: null` with `evidenceCount: 0` means **unscored**. It is not a zero and not a weakness.
-- `costPerCommitCents` / `roiMultiplier` are null whenever `outcomeDataAvailable` is false. Say "not measurable in this window". Never $0, and never substitute `personalSpendCents`.
+- `costPerCommitCents` / `roiMultiplier` are null whenever `outcomeDataAvailable` is false. Say "not measurable in this window". Never \$0, and never substitute `personalSpendCents`.
 - `orphanRatio: null` means no outcome data to link against. Not 0, not 1.
 
 A developer with a null ROI baseline gets a proposal with **no dollar figures in it at all**. That is correct and complete, not a degraded result.
