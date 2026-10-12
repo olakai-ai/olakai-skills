@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.1"
+  version: "1.19.0"
 ---
 
 # Olakai Analytics Reports
@@ -31,6 +31,38 @@ For full documentation, see: https://app.olakai.ai/llms.txt
 > **Or connect via MCP.** Everything this skill does from the CLI — usage summaries, KPI trends, ROI, and risk analysis — your assistant can also do directly once your account is connected through the **Olakai MCP connector**. Point any MCP-capable client (Claude Desktop, claude.ai, Claude Code, ChatGPT, Codex, Cursor) at your server URL, approve the one-time OAuth consent, and ask for the report in natural language. Setup: https://app.olakai.ai/docs/olakai/olakai-mcp-connect. The CLI stays the right tool for scripting and piping into `jq`; MCP is the right tool when you want the assistant itself to pull and explain the numbers.
 
 ## Prerequisites
+
+**`jq` is required** by every recipe below. macOS/Linux: `brew install jq` or
+`apt install jq`. Git Bash on Windows does **not** ship it — without `jq` the
+pipelines fail outright, which is at least loud.
+
+**Two silent-zero traps, both measured against the live API shape:**
+
+1. **`--include-analytics` is not optional.** `task`, `timesaved_minutes` and
+   `riskassessment_dangerousity` live under an `analytics` object that is
+   **absent** unless the flag is passed. Read them without it and every figure
+   is `0` or `null` — no error.
+2. **`olakai activity kpis` requires `--agent-id` or `--workflow-id`** and
+   exits 400 without one.
+
+Field names come from `apps/main-app/src/app/api/activity/prompts/route.ts`.
+The ones this skill got wrong until OLA-1611 — and what they silently returned
+against three real events (one blocked, one high-risk, 15 minutes saved):
+
+| Wrong | Right | Silent result |
+|---|---|---|
+| `.model` | `.modelType` | `unique_models: 1` instead of 2 |
+| `.status == "blocked"` | `.blocked` (boolean) | `blocked: 0` instead of 1 |
+| `.status != "error"` | `.decorationStatus != "DECORATION_FAILED"` | 100% success |
+| `.riskScore` (0-10) | `.analytics.riskassessment_dangerousity` (**0-1**) | `high_risk: 0` instead of 1 |
+| `.timeSavedMinutes` | `.analytics.timesaved_minutes` | `0` instead of 15 |
+| `.task` | `.analytics.task` | no grouping |
+| `.sensitivityLabel` | `.sensitivity` (**array** of PII/PHI/CODE/SECRET) | `null` label |
+| `.kpis[]` | `.coreKpis[]` (`.kpis` is an **object** keyed by definition id) | `[]` for ROI |
+
+**Risk is 0-1, never out of 10.** Bands: `> 0.8` High, `0.2`-`0.8` Medium,
+`< 0.2` Low, with `0.6` the compliance cut — the same thresholds
+`olakai-governance` uses. Never present a `/10` score.
 
 Before generating reports, ensure:
 
@@ -58,11 +90,11 @@ olakai agents list --json | jq '.[] | {id, name}'
 
 | Command | Data Retrieved |
 |---------|---------------|
-| `olakai activity list --json` | Events with tokens, model, risk, status |
-| `olakai activity list --include-analytics --json` | + task, subtask, time saved, risk score |
-| `olakai activity kpis --json` | Raw metrics, metric slot KPIs, composites (ROI) + custom KPIs |
-| `olakai activity kpis --period daily --json` | Time-series breakdown |
-| `olakai activity kpis --include-atoms --json` | Per-event KPI values |
+| `olakai activity list --json` | Events: `modelType`, `tokens`, `isHighRisk`, `blocked`, `decorationStatus`, `sensitivity[]` |
+| `olakai activity list --include-analytics --json` | **+ an `analytics` object** — `task`, `subtask`, `timesaved_minutes`, `riskassessment_dangerousity`. Without the flag there is no `analytics` key at all |
+| `olakai activity kpis --agent-id AGENT_ID --json` | Raw metrics, metric slot KPIs, composites (ROI) + custom KPIs |
+| `olakai activity kpis --agent-id AGENT_ID --period daily --json` | Time-series breakdown |
+| `olakai activity kpis --agent-id AGENT_ID --include-atoms --json` | Per-event KPI values |
 | `olakai agents list --json` | Agent metadata |
 | `olakai kpis list --json` | KPI definitions |
 | `olakai activity sessions --agent-id ID --json` | Session decoration status + summary counts |
@@ -84,11 +116,11 @@ cat /tmp/events.json | jq '{
   total_events: (.prompts | length),
   total_tokens: ([.prompts[].tokens // 0] | add),
   avg_tokens: ([.prompts[].tokens // 0] | add / length | floor),
-  unique_models: ([.prompts[].model] | unique | length),
-  models: ([.prompts[].model] | group_by(.) | map({model: .[0], count: length})),
+  unique_models: ([.prompts[].modelType] | unique | length),
+  models: ([.prompts[].modelType] | group_by(.) | map({model: .[0], count: length})),
   unique_agents: ([.prompts[].app] | unique | length),
   agents: ([.prompts[].app] | group_by(.) | map({agent: .[0], count: length})),
-  success_rate: (([.prompts[] | select(.status != "error")] | length) / (.prompts | length) * 100 | floor)
+  success_rate: (([.prompts[] | select(.decorationStatus != "DECORATION_FAILED")] | length) / (.prompts | length) * 100 | floor)
 }'
 ```
 
@@ -152,10 +184,10 @@ Shows KPI values over time with period-over-period comparisons.
 
 ```bash
 # Get KPIs with daily breakdown
-olakai activity kpis --period daily --json > /tmp/kpis_daily.json
+olakai activity kpis --agent-id AGENT_ID --period daily --json > /tmp/kpis_daily.json
 
 # Get KPIs with weekly breakdown
-olakai activity kpis --period weekly --json > /tmp/kpis_weekly.json
+olakai activity kpis --agent-id AGENT_ID --period weekly --json > /tmp/kpis_weekly.json
 
 # Extract trend data
 cat /tmp/kpis_daily.json | jq '{
@@ -265,13 +297,13 @@ olakai activity list --limit 200 --include-analytics --json > /tmp/events.json
 # Extract risk metrics
 cat /tmp/events.json | jq '{
   total_events: (.prompts | length),
-  high_risk: ([.prompts[] | select(.riskScore >= 7)] | length),
-  medium_risk: ([.prompts[] | select(.riskScore >= 4 and .riskScore < 7)] | length),
-  low_risk: ([.prompts[] | select(.riskScore < 4)] | length),
-  blocked: ([.prompts[] | select(.status == "blocked")] | length),
-  blocked_percentage: (([.prompts[] | select(.status == "blocked")] | length) / (.prompts | length) * 100),
-  sensitivity_labels: ([.prompts[].sensitivityLabel] | group_by(.) | map({label: .[0], count: length})),
-  avg_risk_score: ([.prompts[].riskScore // 0] | add / length)
+  high_risk: ([.prompts[] | select((.analytics.riskassessment_dangerousity // 0) > 0.8)] | length),
+  medium_risk: ([.prompts[] | select((.analytics.riskassessment_dangerousity // 0) >= 0.2 and (.analytics.riskassessment_dangerousity // 0) <= 0.8)] | length),
+  low_risk: ([.prompts[] | select((.analytics.riskassessment_dangerousity // 0) < 0.2)] | length),
+  blocked: ([.prompts[] | select(.blocked)] | length),
+  blocked_percentage: (([.prompts[] | select(.blocked)] | length) / (.prompts | length) * 100),
+  sensitivity_labels: ([.prompts[].sensitivity[]] | group_by(.) | map({label: .[0], count: length})),
+  avg_risk_score: ([.prompts[].analytics.riskassessment_dangerousity // 0] | add / length)
 }'
 ```
 
@@ -288,7 +320,7 @@ Period: Last [N] events
 | Total Events Analyzed | [COUNT] |
 | High Risk Events | [COUNT] ([%]%) |
 | Blocked Events | [COUNT] ([%]%) |
-| Average Risk Score | [SCORE]/10 |
+| Average Risk Score | [SCORE] (0-1) |
 
 ## Risk Distribution
 [ASCII BAR CHART]
@@ -315,12 +347,12 @@ Period: Last 200 events
 | Total Events Analyzed | 200 |
 | High Risk Events | 8 (4%) |
 | Blocked Events | 3 (1.5%) |
-| Average Risk Score | 2.3/10 |
+| Average Risk Score | 0.23 |
 
 ## Risk Distribution
-Low (0-3)     ████████████████████████████████████████ 172 (86%)
-Medium (4-6)  ████████ 20 (10%)
-High (7-10)   ████ 8 (4%)
+Low (<0.2)       ████████████████████████████████████████ 172 (86%)
+Medium (0.2-0.8) ████████ 20 (10%)
+High (>0.8)      ████ 8 (4%)
 
 ## Events by Sensitivity Label
 Public        ████████████████████████████████████ 145
@@ -346,7 +378,7 @@ Shows time saved, cost metrics, and productivity gains.
 
 ```bash
 # Get KPIs (includes ROI data)
-olakai activity kpis --json > /tmp/kpis.json
+olakai activity kpis --agent-id AGENT_ID --json > /tmp/kpis.json
 
 # Get events with time saved data
 olakai activity list --limit 100 --include-analytics --json > /tmp/events.json
@@ -354,18 +386,18 @@ olakai activity list --limit 100 --include-analytics --json > /tmp/events.json
 # Extract efficiency metrics
 cat /tmp/events.json | jq '{
   total_events: (.prompts | length),
-  total_time_saved_minutes: ([.prompts[].timeSavedMinutes // 0] | add),
-  avg_time_saved: ([.prompts[].timeSavedMinutes // 0] | add / length),
+  total_time_saved_minutes: ([.prompts[].analytics.timesaved_minutes // 0] | add),
+  avg_time_saved: ([.prompts[].analytics.timesaved_minutes // 0] | add / length),
   total_tokens: ([.prompts[].tokens // 0] | add),
-  by_task: ([.prompts[] | select(.task != null)] | group_by(.task) | map({
-    task: .[0].task,
+  by_task: ([.prompts[] | select(.analytics.task != null)] | group_by(.analytics.task) | map({
+    task: .[0].analytics.task,
     count: length,
-    time_saved: ([.[].timeSavedMinutes // 0] | add)
+    time_saved: ([.[].analytics.timesaved_minutes // 0] | add)
   }))
 }'
 
 # Get ROI from KPIs
-cat /tmp/kpis.json | jq '.kpis[] | select(.name | contains("ROI") or contains("Compliance"))'
+cat /tmp/kpis.json | jq '.coreKpis[] | select(.name | test("ROI|Compliance"))'
 ```
 
 ### Report Template
@@ -453,14 +485,14 @@ cat /tmp/events.json | jq '{
     name: $agent,
     events: ([($parent.prompts // [])[] | select(.app == $agent)] | length),
     tokens: ([($parent.prompts // [])[] | select(.app == $agent) | .tokens // 0] | add),
-    avg_risk: ([($parent.prompts // [])[] | select(.app == $agent) | .riskScore // 0] | add / length)
+    avg_risk: ([($parent.prompts // [])[] | select(.app == $agent) | .analytics.riskassessment_dangerousity // 0] | add / length)
   }))
 }'
 
 # Alternative: Get KPIs per agent
 for agent_id in $(olakai agents list --json | jq -r '.[].id'); do
   echo "Agent: $agent_id"
-  olakai activity kpis --agent-id $agent_id --json | jq '.kpis[] | {name, value}'
+  olakai activity kpis --agent-id $agent_id --json | jq '.coreKpis[] | {name, value}'
 done
 ```
 
@@ -531,7 +563,7 @@ To create horizontal bar charts, use this pattern:
 ```bash
 # Generate bar chart from jq output
 cat /tmp/events.json | jq -r '
-  [.prompts[].model] | group_by(.) | map({model: .[0], count: length}) |
+  [.prompts[].modelType] | group_by(.) | map({model: .[0], count: length}) |
   sort_by(-.count) |
   (max_by(.count).count) as $max |
   .[] |
@@ -574,19 +606,19 @@ Pattern:
 
 ```bash
 # Usage Summary
-olakai activity list --limit 100 --json | jq '{
+olakai activity list --limit 100 --include-analytics --json | jq '{
   events: (.prompts | length),
   tokens: ([.prompts[].tokens // 0] | add),
-  models: ([.prompts[].model] | unique)
+  models: ([.prompts[].modelType] | unique)
 }'
 
 # KPI Snapshot
-olakai activity kpis --json | jq '.kpis[] | {name, value, unit}'
+olakai activity kpis --agent-id AGENT_ID --json | jq '.coreKpis[] | {name, value, unit}'
 
 # Risk Summary
-olakai activity list --limit 100 --json | jq '{
-  high_risk: ([.prompts[] | select(.riskScore >= 7)] | length),
-  blocked: ([.prompts[] | select(.status == "blocked")] | length)
+olakai activity list --limit 100 --include-analytics --json | jq '{
+  high_risk: ([.prompts[] | select((.analytics.riskassessment_dangerousity // 0) > 0.8)] | length),
+  blocked: ([.prompts[] | select(.blocked)] | length)
 }'
 
 # Agent List
@@ -596,8 +628,8 @@ olakai agents list --json | jq '.[] | {id, name}'
 olakai activity kpis --agent-id AGENT_ID --json
 
 # Time-Series Data
-olakai activity kpis --period daily --json
-olakai activity kpis --period weekly --json
+olakai activity kpis --agent-id AGENT_ID --period daily --json
+olakai activity kpis --agent-id AGENT_ID --period weekly --json
 ```
 
 ---
@@ -625,7 +657,7 @@ cat /tmp/activity.json | jq -r '"| Metric | Value |
 |--------|-------|
 | Total Events | \(.prompts | length) |
 | Total Tokens | \([.prompts[].tokens // 0] | add) |
-| Unique Models | \([.prompts[].model] | unique | length) |"'
+| Unique Models | \([.prompts[].modelType] | unique | length) |"'
 ```
 
 ---
