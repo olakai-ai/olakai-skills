@@ -126,7 +126,10 @@ Each skill follows YAML frontmatter + Markdown format with:
 ### The description is capped at 1024 characters, and it is gated
 
 `scripts/validate-descriptions.sh` **fails the build** over 1024 characters, and
-warns past 975 so a near-cap skill is not one edit away from a red build. It also
+warns past 1010. The warn band is deliberately narrow: `olakai-finops` ships at
+1008 and is correct, and a warn that fires on a compliant file is one people
+learn to ignore. Treat the warn as a backstop, not an early-warning system —
+the hard fail is the real protection. It also
 rejects a missing or empty description, a `<` or `>` inside one (both forbidden
 by the spec), a bad `name`, and any frontmatter key outside
 `name`/`description`/`license`/`allowed-tools`/`metadata`/`compatibility`.

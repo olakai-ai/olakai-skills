@@ -64,6 +64,14 @@ set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
+# `--lengths` prints one `<path>\t<chars>\t<style>` line per file and nothing
+# else, so the self-test can assert exact numbers without scraping FAIL/WARN/OK
+# prose. Its first version grepped the WARN wording and therefore only worked
+# while the fixtures happened to sit above the warn line — raising the warn
+# threshold made it fail while reporting the right number, and blame the folding.
+PRINT_LENGTHS=0
+if [ "${1:-}" = "--lengths" ]; then PRINT_LENGTHS=1; shift; fi
+
 # Default to every real skill. The self-test passes fixtures instead, so the
 # gate can be proved to reject — and proved EXACT, not merely directional.
 if [ "$#" -gt 0 ]; then
@@ -78,11 +86,15 @@ MAX_DESCRIPTION="${MAX_DESCRIPTION:-1024}"
 # bare 1024 gate would let the next edit to it break CI by surprise. A warn does
 # NOT fail the build; if it did, this would just be a lower cap wearing a
 # different word, and the first response to it would be to raise the number.
-WARN_DESCRIPTION="${WARN_DESCRIPTION:-975}"
+# 1010, not something tighter: olakai-finops ships at 1008 and is compliant, and
+# a warn that fires on a correct file is a warn people learn to ignore. The band
+# is for catching the next edit, not for relitigating a passing one.
+WARN_DESCRIPTION="${WARN_DESCRIPTION:-1010}"
 
-echo "=== SKILL.md frontmatter: description length and spec limits ==="
+[ "$PRINT_LENGTHS" -eq 1 ] || echo "=== SKILL.md frontmatter: description length and spec limits ==="
 
 MAX_DESCRIPTION="$MAX_DESCRIPTION" WARN_DESCRIPTION="$WARN_DESCRIPTION" \
+PRINT_LENGTHS="$PRINT_LENGTHS" \
   perl - "${FILES[@]}" <<'PERL'
 use strict;
 use warnings;
@@ -91,6 +103,7 @@ use Encode qw(decode_utf8 FB_CROAK);
 my $MAX  = $ENV{MAX_DESCRIPTION}  || 1024;
 my $WARN = $ENV{WARN_DESCRIPTION} || 975;
 my $GHA  = $ENV{GITHUB_ACTIONS} ? 1 : 0;
+my $LENGTHS_ONLY = $ENV{PRINT_LENGTHS} ? 1 : 0;
 
 # Mirrors ALLOWED_PROPERTIES in Anthropic's quick_validate.py.
 my %ALLOWED = map { $_ => 1 }
@@ -181,7 +194,12 @@ sub scalar_value {
         if $l =~ /^ *\t/;
       push @body, $l;
     }
-    pop @body while @body && $body[-1] eq '';
+    # Count the trailing blank lines before dropping them: clip keeps exactly
+    # one newline, keep (`+`) keeps all of them. Measuring `+` as clip was a
+    # silent wrong number — unbounded, not off-by-one — in a script whose whole
+    # contract is to refuse rather than guess.
+    my $trailing_blanks = 0;
+    while (@body && $body[-1] eq '') { pop @body; $trailing_blanks++ }
 
     my $ci = $explicit ? $explicit + 0 : undef;
     if (!defined $ci) {
@@ -210,7 +228,9 @@ sub scalar_value {
       $out .= "\n" if length $out;
     }
 
-    $out =~ s/\n+\z// if $chomp eq '-';    # strip; clip is already applied above
+    if    ($chomp eq '-') { $out =~ s/\n+\z// }                       # strip
+    elsif ($chomp eq '+') { $out .= "\n" x $trailing_blanks }         # keep
+    # else: clip, already applied above.
     return ($out, $ind . $chomp);
   }
 
@@ -293,6 +313,12 @@ for my $file (@ARGV) {
   }
 
   my $len = length($desc);
+
+  if ($LENGTHS_ONLY) {
+    print "$file\t$len\t$style\n";
+    next;
+  }
+
   if ($len > $MAX) {
     problem($file, "has a description of $len characters (style `$style`); the spec caps it at $MAX. "
                  . 'Trim ' . ($len - $MAX) . ' character'

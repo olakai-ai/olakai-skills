@@ -10,7 +10,8 @@ description: |
   confirm monitoring is working, see what is monitored on this machine, or (as
   an ADMIN) bulk-provision coding-agent monitoring across a team or fleet.
   TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, local coding agent,
-  olakai hooks, olakai monitor init, bulk-provision.
+  olakai hooks, olakai monitor init, bulk-provision, fleet rollout, intune,
+  jamf, mdm.
   DO NOT load for: instrumenting your own agent's SDK code (use
   olakai-integrate), building an agent from scratch (use olakai-new-project),
   or SDK / KPI / event troubleshooting unrelated to a coding tool (use

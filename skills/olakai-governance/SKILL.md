@@ -7,10 +7,10 @@ description: >
 
   AUTO-INVOKE when the user asks to analyze my governance risks, are we exposed
   on PII, PHI, code or secrets, or for any reading of Olakai risk, compliance,
-  flagged interactions or policy violations.
+  flagged interactions, policy violations or audit readiness.
 
   TRIGGER KEYWORDS: olakai, governance, exposed, dangerousity, flagged, shadow
-  AI, department risk.
+  AI, department risk, audit, auditor.
 
   CRITICAL: Olakai governance is POST-HOC DETECTION over METADATA ONLY. It
   never blocks a prompt and returns no prompt text. Dangerousity (0-1) and PII+
