@@ -114,10 +114,55 @@ olakai-skills/
 | `olakai-tune-my-setup` | ~380 | The Fluency Feedback Loop's prescription leg — diffs the AI Fluency report against the developer's ACTUAL local agent config, proposes two or three lever-derived edits, shows each as a diff, applies nothing without approval, records the experiment |
 
 Each skill follows YAML frontmatter + Markdown format with:
-- `name`: Skill identifier
-- `description`: Brief purpose
+- `name`: Skill identifier. 1-64 characters, `^[a-z0-9-]+$`, no leading,
+  trailing or doubled hyphen. It normally matches the directory name;
+  `olakai-status` deliberately declares `name: olakai` so the slash command is
+  `/olakai`, and that is the one exception.
+- `description`: what the skill does **and when to use it**. See below — it has
+  a hard length cap, and it is the single most expensive field in the repo.
 - `license`: MIT
 - `metadata`: Author and version info
+
+### The description is capped at 1024 characters, and it is gated
+
+`scripts/validate-descriptions.sh` **fails the build** over 1024 characters, and
+warns past 975 so a near-cap skill is not one edit away from a red build. It also
+rejects a missing or empty description, a `<` or `>` inside one (both forbidden
+by the spec), a bad `name`, and any frontmatter key outside
+`name`/`description`/`license`/`allowed-tools`/`metadata`/`compatibility`.
+
+The cap is the Agent Skills spec's. It matters for two reasons that are easy to
+miss because **nothing reports either one**:
+
+1. **Portability.** Anthropic's own `quick_validate.py` treats over-1024 as a
+   hard failure and `package_skill.py` refuses to package such a skill. Claude
+   Code itself does not enforce the cap, so an over-cap skill looks completely
+   fine here and fails somewhere else.
+2. **Context, and not only this skill's.** `name` + `description` are the only
+   things preloaded, for every installed skill, on every turn — roughly 100
+   tokens each. Claude Code truncates `description` + `when_to_use` at 1536 in
+   the skill listing, and once the listing passes ~1% of the context window it
+   **drops whole descriptions**, least-used first. An oversized description
+   spends other skills' routing text, silently.
+
+Four descriptions in this repo had reached 1206-1877 characters before anything
+measured them.
+
+**Write them in the house shape**: one sentence on what it does, `AUTO-INVOKE
+when …`, a short `TRIGGER KEYWORDS:` line, a `CRITICAL:` block where
+misreading the data is the live risk, then `DO NOT load for: …` naming the
+adjacent skills. Keep the whole thing around 100-200 words.
+
+**Keep `TRIGGER KEYWORDS` short, and general.** Anthropic's own description
+optimizer is explicit that an ever-expanding list of specific queries is the
+wrong shape — generalize to categories of user intent instead, because the list
+is injected into every query. Keywords that genuinely do not generalize (`agy`,
+`agent 404`) belong in the Skill Selection Matrix below, which is uncapped.
+
+**If you reword a description, run the gate** (`./scripts/validate.sh`). If you
+change a fixture under `scripts/__fixtures__/`, update its expected length in
+the same commit — `validate-descriptions-selftest.sh` asserts exact numbers,
+because a length gate decays by drifting its arithmetic, not by going slack.
 
 ## Safety-critical skills
 
@@ -292,13 +337,29 @@ Before answering Olakai-related questions, evaluate whether to load a skill:
 | **Not set up yet** | `olakai-get-started` | get started, setup, install, signup, account, new to olakai |
 | Build new AI agent | `olakai-new-project` | create, new, build, start, design agent |
 | Add monitoring to existing code | `olakai-integrate` | add, integrate, existing, wrap, instrument |
-| Monitor a local coding agent (Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity, olakai monitor init, local coding agent, hooks |
-| Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor/gemini-cli/antigravity, fix monitoring, agent 404, agents mine |
+| Monitor a local coding agent (Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI) | `olakai-monitor-local-coding-agent` | monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity, agy, codex cli, cursor hooks, gemini-cli hooks, olakai monitor init, local coding agent, hooks, monitor workspace, track sessions, where am i monitoring, bulk provision, fleet rollout, intune, jamf, mdm, provision my team, admin monitor, install-hooks, home key file |
+| Diagnose / repair a coding tool's own monitoring | `olakai-monitor-doctor` | monitor doctor, monitor repair, monitor list, no events claude code/codex/cursor/gemini-cli/antigravity, fix monitoring, repair monitoring, agent 404, agent missing, agents mine, hooks stopped firing, drift, registry, re-link monitoring key, self-heal monitoring, is my monitoring working |
+| Read AI risk / compliance / exposure data over MCP ⁑ | `olakai-governance` | governance, exposed, exposure, analyze my governance risks, are we exposed, risky prompts, dangerousity, compliance rate, governance compliance, flagged, flagged interactions, violation, policy risk, built-in risk, PII, PHI, secrets, credentials, API key leak, data leak, sensitive prompts, moderation status, false positive, triage, audit, auditor, infosec questionnaire, EU AI Act, NIST AI RMF, ISO 42001, shadow AI, unsanctioned AI, enforcement, policy reminder, department risk |
+| Read AI cost / spend / ROI data over MCP ⁑ | `olakai-finops` | finops, AI spend, AI cost, burn rate, run rate, forecast, budget variance, chargeback, showback, allocation, unattributed spend, unit economics, spend spike, model swap, seat licensing, ROI, execution cost |
 | Check personal spend, budget, and monitoring health | `olakai-status` | olakai status, my spend, my budget, am I monitored, coding iq status, personal spend, budget limit, olakai digest |
-| Change how the coding agent is configured, based on measured fluency | `olakai-tune-my-setup` | tune my setup, what should I change, improve my fluency, my growth edge, my agent ignores CLAUDE.md, setup lever, fluency experiment, did my change work |
+| Change how the coding agent is configured, based on measured fluency | `olakai-tune-my-setup` | tune my setup, tune-my-setup, what should I change, improve my fluency, my growth edge, growth edge, my agent ignores CLAUDE.md, fix my CLAUDE.md, verification score, setup lever, setup signals, fluency experiment, fluency feedback loop, record fluency experiment, did my change work, adoption check |
 | Something not working (SDK / KPI / event issues) | `olakai-troubleshoot` | not working, error, missing, wrong, null, debug |
 | View data/metrics | `olakai-reports` | report, analytics, summary, trends, usage |
 | Create implementation plan | `olakai-planning` | plan, steps, roadmap, architecture, design, plan mode |
+
+⁑ **The two MCP-driven skills do not take the CLI prerequisite path below.**
+`olakai-governance` and `olakai-finops` read the Olakai MCP connector, not the
+CLI, so `which olakai` / `olakai whoami` is the wrong precondition for them —
+checking it routes the user correctly and then fails them on an irrelevant
+check. They need an MCP connection; on-prem serves no skills at all.
+
+Keywords here are deliberately longer and more specific than the ones in each
+skill's own `description`. A description is preloaded on every turn and capped
+at 1024 characters; this table is read only once an agent has already decided
+the request is Olakai-related, so overfit tokens cost nothing here. This is
+where keywords trimmed out of a description should land — though note it is a
+genuine demotion in reach, not a lossless move, since this file is not
+preloaded the way a description is.
 
 ### Invocation Pattern
 
@@ -621,6 +682,8 @@ olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime
 
 1. **Keep under 500 lines** - Preserves Claude's context for actual work
 2. **YAML frontmatter required** - `name`, `description`, `license`, `metadata` fields
+   (the `description` is capped at 1024 characters and gated — see "The
+   description is capped at 1024 characters, and it is gated" above)
 3. **Test after changes** - Install skill in Claude Code and invoke it
 4. **Preserve the Golden Rule** - Test → Fetch → Validate pattern in all skills
 

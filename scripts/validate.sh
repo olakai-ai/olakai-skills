@@ -5,27 +5,20 @@ cd "$(git rev-parse --show-toplevel)"
 
 status=0
 
-echo "=== Validating SKILL.md frontmatter ==="
-for file in skills/*/SKILL.md; do
-  skill_name=$(basename "$(dirname "$file")")
-
-  if ! head -1 "$file" | grep -q '^---$'; then
-    echo "FAIL: $file — missing YAML frontmatter"
-    status=1
-    continue
-  fi
-
-  frontmatter=$(sed -n '1,/^---$/{ /^---$/d; p; }' "$file" | tail -n +1)
-
-  for field in name description; do
-    if ! echo "$frontmatter" | grep -q "^${field}:"; then
-      echo "FAIL: $file — missing field: $field"
-      status=1
-    fi
-  done
-
-  echo "  OK: $skill_name"
-done
+# Frontmatter: required fields, name rules, and description length.
+#
+# This replaces an inline loop that could never fail. It extracted the
+# frontmatter with
+#   sed -n '1,/^---$/{ /^---$/d; p; }'
+# which ranges line 1 to the FIRST /^---$/ — line 1 itself — then deletes it,
+# so the variable was always empty and the name/description presence checks
+# under it always passed. Nothing was lost by deleting it; the replacement
+# checks the same two fields and measures the description as well.
+./scripts/validate-descriptions.sh || status=1
+echo ""
+# …and the gate has a gate. A length gate degrades by drifting its ARITHMETIC,
+# so prove it still measures the fixtures exactly, not merely that it rejects.
+./scripts/validate-descriptions-selftest.sh || status=1
 
 echo ""
 echo "=== Verifying symlinks ==="
@@ -59,7 +52,12 @@ echo ""
 
 echo ""
 echo "=== Linting markdown ==="
-if command -v npx &>/dev/null; then
+# CI runs the pinned markdownlint-cli2 ACTION as its own step, so skip this one
+# there: running both would either lint twice or quietly trade a pinned action
+# for an unpinned `npx --yes` fetch.
+if [ -n "${CI:-}" ]; then
+  echo "SKIP: CI runs markdownlint as its own pinned step"
+elif command -v npx &>/dev/null; then
   npx --yes markdownlint-cli2 "skills/**/*.md" --config .markdownlint.json && echo "  OK: no lint errors" || status=1
 else
   echo "SKIP: npx not found — install Node.js to run markdown lint"

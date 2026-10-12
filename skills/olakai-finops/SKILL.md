@@ -10,10 +10,8 @@ description: >
   team, who is burning the budget, whether they will land on plan, why spend
   spiked, where to cut, or their AI ROI.
 
-  TRIGGER KEYWORDS: olakai, finops, AI spend, AI cost, burn rate, run rate,
-  forecast, budget variance, chargeback, showback, allocation, unattributed
-  spend, unit economics, spend spike, model swap, seat licensing, ROI,
-  execution cost.
+  TRIGGER KEYWORDS: olakai, finops, AI spend, AI cost, burn rate, forecast,
+  budget variance, showback, unattributed spend, model swap, ROI.
 
   CRITICAL: there are THREE cost authorities — virtual, billed and allocated —
   never summed. Budgets are overlapping lenses, not a partition, and they only
@@ -25,7 +23,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Olakai AI FinOps (over MCP)
