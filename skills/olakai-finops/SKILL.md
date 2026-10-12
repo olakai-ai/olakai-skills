@@ -25,7 +25,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Olakai AI FinOps (over MCP)
@@ -103,7 +103,7 @@ From the breakdown, three things gate the whole answer:
 
 - **`windowTotalCents === 0` with empty `byProvider`** means *no admin-API cost
   data is flowing yet* — nobody connected a provider key. Say that; never "you
-  spent $0", and never analyse anyway.
+  spent \$0", and never analyse anyway.
 - **`coverage.coveragePct`** (0–1) is the FinOps **attribution coverage** KPI.
   Report it, and `coverage.unassignedCents` in dollars, before any per-project,
   per-team or per-developer claim. At 0.09, a project breakdown describes 9% of
@@ -122,7 +122,7 @@ a low number as a failing report card.
 
 | Authority | Comes from | What it is | Never |
 |---|---|---|---|
-| **Virtual / estimated** | `uni_EstimatedCost` via `run_analytics_query` (tokens x the model's blended rate, `$5`/M default) | the token *value* of usage at list price | call it billed; sum it with billed |
+| **Virtual / estimated** | `uni_EstimatedCost` via `run_analytics_query` (tokens x the model's blended rate, `\$5`/M default) | the token *value* of usage at list price | call it billed; sum it with billed |
 | **Billed / admin-API** | `get_coding_spend_breakdown`, `get_provider_cost_breakdown`, `get_scope_spend_breakdown`, `get_coding_project_cost_breakdown` — all in **USD cents** | the authoritative bill | assume it covers seat-based providers |
 | **Allocated** | estimate used as a *weight*, reconciled to billed: `k = billed / sum(estimate)`, applied as `min(k, 1)` | per-developer attribution of a billed total | treat the cap as rounding — it scales **down only**, and `k` itself is a coverage signal |
 
@@ -195,9 +195,9 @@ already carry the query-tier conditions.
     under-running the program total is **expected, not a reconciliation bug** —
     unattributed spend counts in PROGRAM and PROVIDER and is dropped from the
     per-entity dimensions.
-13. **`$0` is a real budget meaning "no spend allowed"; absent means no
+13. **`\$0` is a real budget meaning "no spend allowed"; absent means no
     budget.** Over is `mtd >= limit` at a positive limit but `mtd > 0` at zero.
-    Percentages are undefined at zero — switch unit ("$47.20 over"), never
+    Percentages are undefined at zero — switch unit ("\$47.20 over"), never
     `Infinity%`.
 14. **Two forecasts exist, and they diverge materially.**
     `forecast.projectedMonthEndCents` is run-rate: month-to-date plus the mean
@@ -212,13 +212,13 @@ already carry the query-tier conditions.
     `PROVIDER` dimension and has no assignable key, so `byKey` and
     `keyAnomalies` are empty for it. Disclose both.
 16. **"Cost" in Coding IQ ROI is three things.** `aiCostPerMonth` (editable,
-    default **$200/developer/month**, the ROI card's denominator) is not
+    default **\$200/developer/month**, the ROI card's denominator) is not
     `EXECUTION_COST` (allocated seat cost per PR, absent from the headline
     card), and neither is real token spend (`PromptRequest.costUsd`, which
     Coding IQ does not use today).
 17. **Quote the value formulas, never paraphrase.**
     `Value Created = minutes saved x hourly rate / 60`, the rate cascading
-    agent → user → persona → account → **$55/hour**.
+    agent → user → persona → account → **\$55/hour**.
     `ROI = Value Created / Execution Cost`.
     `Net ROI = Value Created / (Execution Cost + Analysis cost)` is **on-prem
     only, per traffic type, never account-wide — and unreachable here.**
@@ -227,9 +227,9 @@ already carry the query-tier conditions.
     itself. Period value is prorated to the window, not quarterly.
 19. **Say which fully-loaded cost layer produced a value figure.**
     `get_ai_roi_report` returns the number with its `costSource` (configured
-    wage vs the **$200K/yr** default) and clamps it to $10K–$10M/yr, returning
+    wage vs the **\$200K/yr** default) and clamps it to \$10K–\$10M/yr, returning
     `invalid_configuration` outside that. A cascade-resolved default lands near
-    $114,400/yr — a different basis, not a rounding difference.
+    \$114,400/yr — a different basis, not a rounding difference.
 20. **Two Shadow AI lenses answer different questions.**
     `subscription cost = monthly per-seat x active users x daysBack / 30` is
     what usage is worth; `licensing cost = seats x monthly per-seat x daysBack
@@ -384,7 +384,7 @@ If coverage is low, the coverage sentence comes before the number.
 
 `set_coding_budget` (PROGRAM, PROVIDER, DEVELOPER, PERSONA, DEPARTMENT) and
 `set_coding_project_budget` (PROJECT). Both are ADMIN, both take a `confirmed`
-field, and limits are **integer USD cents** (`500000` = $5,000). On
+field, and limits are **integer USD cents** (`500000` = \$5,000). On
 `/api/mcp/readonly`, or without the `write` scope, they are not registered — say
 so rather than hunting for an alternative.
 
@@ -404,7 +404,7 @@ Four rules:
 3. **Confirm each write individually.** For a rollout, present the full proposed
    set as one table — scope, current month-to-date, forecast, recommended,
    proposed — and get explicit approval of the table before the first call. A
-   `$0` limit must be confirmed as deliberate, because it means "no spend
+   `\$0` limit must be confirmed as deliberate, because it means "no spend
    allowed" and fires immediately on any spend (rule 13).
 4. **Neither tool removes a budget.** There is no delete here; removal is the
    Budgets page, or archiving the project. Do not offer a limit of `0` as a way
@@ -456,17 +456,17 @@ goes first.
 |---|---|
 | "14 spend spikes this month" | Seasonality counted as incidents (10) |
 | "Spend doubled on the 28th" | Threshold invented from `dailySpend` (11) |
-| "Billed $16,059; estimated $18,200 — call it $17k" | Two authorities averaged (9) |
-| "Departments total $8k but the program is $16k — reconciliation gap" | Budgets are lenses, not a partition (12) |
-| "Engineering has a $0 budget, so none is set" / "Infinity% used" | `$0` is a real limit; switch unit (13) |
-| "On track to spend $16.6k this month" (quoting run-rate as straight-line) | Two forecasts, unnamed (14) |
-| "Total AI spend across all providers: $16,059" | Copilot excluded (15) |
+| "Billed \$16,059; estimated \$18,200 — call it \$17k" | Two authorities averaged (9) |
+| "Departments total \$8k but the program is \$16k — reconciliation gap" | Budgets are lenses, not a partition (12) |
+| "Engineering has a \$0 budget, so none is set" / "Infinity% used" | `\$0` is a real limit; switch unit (13) |
+| "On track to spend \$16.6k this month" (quoting run-rate as straight-line) | Two forecasts, unnamed (14) |
+| "Total AI spend across all providers: \$16,059" | Copilot excluded (15) |
 | "ROI is 4.2x" with no confidence or methodology | Both are returned; omit neither (17, 19) |
 | "AI replaced 3 engineers" | Equivalent Engineers is a modelled ratio over adopters (18) |
 | "We're paying for 40 unused Copilot seats" | Seat cost is not on this connection (20) |
-| "Switching to Haiku saves $4,200" | Advisory estimate, and no baseline (21, 22) |
-| "Max available savings: $2,760/mo" (summing `suggestions` only) | `notApplicable` held 67% of spend (21) |
-| "The budget will cap Engineering at $5k" / "spend is now controlled" | A budget only alerts (24) |
+| "Switching to Haiku saves \$4,200" | Advisory estimate, and no baseline (21, 22) |
+| "Max available savings: \$2,760/mo" (summing `suggestions` only) | `notApplicable` held 67% of spend (21) |
+| "The budget will cap Engineering at \$5k" / "spend is now controlled" | A budget only alerts (24) |
 | "You've used 62% of your intelligence credits, so AI spend is fine" | Olakai's meter, not the AI bill (2) |
 | "No coding spend data, so the account spends nothing on AI" | Suite boundary, not an empty account (3) |
 | "Top cost agents: claude-code-alice, claude-code-bob…" | Coding agents dominate agent rankings (5) |

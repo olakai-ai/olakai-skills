@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.1"
+  version: "1.18.2"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -827,7 +827,7 @@ olakai kpis create --name "Time Saved" \
 ROI = Value Created / Execution Cost
 ```
 
-- **Default hourly rate**: $55/hour (used in Value Created calculation)
+- **Default hourly rate**: \$55/hour (used in Value Created calculation)
 - **Custom rate**: Set per-agent in dashboard > Agent Settings > Assumptions panel
 
 ### Validate ROI Data

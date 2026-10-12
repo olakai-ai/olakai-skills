@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.0"
+  version: "1.18.1"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -679,7 +679,7 @@ Verify the `template-id` you used when creating the KPI is a valid template.
 
 ### Symptom
 
-ROI on the dashboard shows a flat value (e.g., $10) for every prompt request, regardless of conversation complexity.
+ROI on the dashboard shows a flat value (e.g., \$10) for every prompt request, regardless of conversation complexity.
 
 ### Root Cause
 

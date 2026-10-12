@@ -19,7 +19,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.0"
+  version: "1.18.1"
 ---
 
 # Olakai Analytics Reports
@@ -227,9 +227,9 @@ Period: Last 7 days
 | KPI | Current | Previous | Change |
 |-----|---------|----------|--------|
 | Interaction Volume | 847 | 792 | +7% |
-| Execution Cost | $127.50 | $118.80 | +7% |
+| Execution Cost | \$127.50 | \$118.80 | +7% |
 | Time Saved | 1,694 min | 1,584 min | +7% |
-| Value Created | $4,235 | $3,960 | +7% |
+| Value Created | \$4,235 | \$3,960 | +7% |
 | Governance Compliance | 99.2% | 98.5% | +0.7% |
 | ROI | 33.2x | 33.3x | -0.3% |
 
@@ -410,7 +410,7 @@ Period: Last 100 events
 | Total Events | 100 |
 | Total Time Saved | 12.5 hours |
 | Avg Time Saved/Event | 7.5 minutes |
-| Estimated Cost Savings | $1,875 |
+| Estimated Cost Savings | \$1,875 |
 
 ## Governance Compliance
 | Metric | Value |

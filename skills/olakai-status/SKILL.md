@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.1"
+  version: "1.16.2"
 ---
 
 # Olakai Developer Status Digest
@@ -73,9 +73,9 @@ Parse the output as JSON. The shape is:
 Use today's month and year in the heading (e.g., `## Olakai Status — June 2026`).
 
 **Helper — formatting cents:** divide by 100, show two decimal places. Examples:
-- `1208 cents` → `$12.08`
-- `5000 cents` → `$50.00`
-- `0 cents` → `$0.00`
+- `1208 cents` → `\$12.08`
+- `5000 cents` → `\$50.00`
+- `0 cents` → `\$0.00`
 
 **Helper — formatting a timestamp as relative time:**
 - < 1 hour ago → "X minutes ago"
@@ -168,13 +168,13 @@ Collect all applicable items and append an `### Action Items` section at the end
 - Last activity: 2 hours ago — 14 sessions this month
 
 ### Personal Spend (June MTD)
-- Est. cost: **$12.08**
-- Forecast: ~$40.30 by month-end *(high confidence)*
-- Providers: Anthropic $10.20 · Cursor $1.88
+- Est. cost: **\$12.08**
+- Forecast: ~\$40.30 by month-end *(high confidence)*
+- Providers: Anthropic \$10.20 · Cursor \$1.88
 
 ### Budget
-- Limit: $50.00/month
-- Used: 24.2% ($12.08 of $50.00)
+- Limit: \$50.00/month
+- Used: 24.2% (\$12.08 of \$50.00)
 - Forecast: 80.6% by month-end ⚠️ (approaching limit)
 
 ### Identity
@@ -182,7 +182,7 @@ Collect all applicable items and append an `### Action Items` section at the end
 - Projects: Backend Services
 
 ### Action Items
-- [ ] Your forecast (80.6%) is approaching your budget limit ($50.00). Contact your admin if you need a higher limit.
+- [ ] Your forecast (80.6%) is approaching your budget limit (\$50.00). Contact your admin if you need a higher limit.
 ```
 
 ---
@@ -252,7 +252,7 @@ The backend deliberately returns `null` for any value it cannot ground in eviden
 | Field | When `null` / empty | What to render |
 |-------|---------------------|----------------|
 | `dimensions.<key>.meanScore` is `null`, missing, or `evidenceCount = 0` | dimension has no evidence | "no evidence yet" — **never** a middle score like 5/10 |
-| `roi.costPerCommitCents` is `null` | no shipped-outcome data | "insufficient outcome data" — **never** "$0" |
+| `roi.costPerCommitCents` is `null` | no shipped-outcome data | "insufficient outcome data" — **never** "\$0" |
 | `roi.roiMultiplier` is `null` | outcomes not measurable | "insufficient outcome data" — **never** "100%" or "1x" |
 | `roi.leakedSpendCents` is `null` | not computed | "—" |
 | `roi.leakedSpendCents = 0` | computed, no leak | "none detected" |
