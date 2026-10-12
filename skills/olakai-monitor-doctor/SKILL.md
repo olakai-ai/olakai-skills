@@ -3,29 +3,22 @@ name: olakai-monitor-doctor
 description: |
   Diagnose and repair Olakai monitoring for a local coding tool you already set
   up — Claude Code, OpenAI Codex CLI, or Cursor. Drives `olakai monitor list`,
-  `olakai monitor doctor [--fix]`, and `olakai monitor repair` to self-heal
-  hooks-based monitoring (no events, missing KPIs, broken/deleted agent, drifted
-  config). For first-time setup use olakai-monitor-local-coding-agent instead.
-  AUTO-INVOKE when user says: my coding-tool monitoring isn't working, no events
-  from Claude Code / Codex / Cursor, is monitoring on / working, check my olakai
-  monitoring, what's monitored on this machine, monitor doctor, monitor repair,
-  monitor list, fix my monitoring, my monitored agent disappeared / 404, hooks
-  stopped firing, re-link my monitoring key, bulk-provisioned machine not
-  reporting, install-hooks failed, using home key file.
-  TRIGGER KEYWORDS: olakai monitor doctor, olakai monitor repair, olakai monitor
-  list, monitor not working, no events claude code, no events codex, no events
-  cursor, fix monitoring, repair monitoring, agent 404, agent missing, hooks
-  stopped firing, drift, registry, agents mine, where am i monitoring, is my
-  monitoring working, self-heal monitoring, install-hooks, home key file,
-  fleet machine, mdm.
+  `olakai monitor doctor [--fix]` and `olakai monitor repair` to self-heal
+  hooks-based monitoring: no events, missing KPIs, a deleted or 404 agent,
+  drifted config, hooks that stopped firing.
+  AUTO-INVOKE whenever monitoring that was already set up looks broken or
+  suspect, or when the user wants to confirm what is monitored on this machine
+  and whether it is still reporting.
+  TRIGGER KEYWORDS: olakai monitor doctor, olakai monitor repair, olakai
+  monitor list, monitoring not working, no events from claude code, agent 404.
   DO NOT load for: first-time setup of a coding tool (use
   olakai-monitor-local-coding-agent), instrumenting your own agent's SDK code
-  (use olakai-integrate), generic SDK / KPI / event troubleshooting unrelated to
-  a coding tool (use olakai-troubleshoot).
+  (use olakai-integrate), or SDK / KPI / event troubleshooting unrelated to a
+  coding tool (use olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.0"
+  version: "1.21.1"
 ---
 
 # Self-Heal Local Coding Agent Monitoring

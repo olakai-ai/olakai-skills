@@ -1,30 +1,27 @@
 ---
 name: olakai-tune-my-setup
 description: >
-  Diff your Olakai AI Fluency report against your ACTUAL local coding-agent setup
-  and propose two or three specific configuration changes, each shown as a diff
-  and applied only on your approval.
+  Diff your Olakai AI Fluency report against your ACTUAL local coding-agent
+  setup and propose two or three specific configuration changes, each shown as
+  a diff and applied only on your approval.
 
-  AUTO-INVOKE when user asks: tune my setup, improve my AI fluency, what should I
-  change about how I work with my coding agent, why is my verification score low,
-  fix my CLAUDE.md, my agent ignores my instructions, close the gap between my
-  instructions and my behavior, what setup change would help me, apply an Olakai
-  lever, record that I changed my setup, did my last setup change work.
+  AUTO-INVOKE when the user asks what to change about how they work with their
+  coding agent — tune my setup, improve my fluency, why a fluency dimension
+  scores low, my agent ignores my CLAUDE.md — or wants to apply an Olakai
+  lever, record a setup change, or check whether their last change worked.
 
-  TRIGGER KEYWORDS: olakai tune, tune my setup, tune-my-setup, fluency feedback
-  loop, setup lever, growth edge, my growth edge, what should I change, improve
-  my fluency, my agent ignores CLAUDE.md, setup signals, fluency experiment,
-  record fluency experiment, did my change work, adoption check.
+  TRIGGER KEYWORDS: olakai tune, tune my setup, my growth edge, setup lever,
+  fluency experiment, did my change work.
 
-  DO NOT load for: setting up monitoring in the first place (use
-  olakai-monitor-local-coding-agent), a quick spend/budget/monitoring digest (use
-  olakai-status), account-wide analytics (use olakai-reports), instrumenting your
-  own agent's source code (use olakai-integrate), or troubleshooting events and
-  KPIs (use olakai-troubleshoot).
+  DO NOT load for: setting up monitoring (use
+  olakai-monitor-local-coding-agent), a spend or budget digest (use
+  olakai-status), account-wide analytics (use olakai-reports), instrumenting
+  your own agent's source code (use olakai-integrate), or troubleshooting
+  events and KPIs (use olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.2"
+  version: "1.1.3"
 ---
 
 # Tune My Setup

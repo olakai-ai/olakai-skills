@@ -2,34 +2,24 @@
 name: olakai-monitor-local-coding-agent
 description: |
   Set up and self-heal Olakai monitoring for the coding tool you are using —
-  Claude Code, OpenAI Codex CLI, Cursor, Google Gemini CLI, or Antigravity CLI. Installs hooks,
-  creates the agent record, and explains how to enrich events with KPIs. This is
-  the skill for "monitor my coding tool itself" (not for instrumenting your own
-  agent's source code with the SDK — that is olakai-integrate).
-  AUTO-INVOKE when user wants to: monitor Claude Code / Codex / Cursor / Gemini CLI / Antigravity CLI sessions,
-  monitor THIS coding tool, add observability to a local coding agent, track my
-  own coding-assistant usage, set up olakai monitoring in this workspace, see
-  what is being monitored on this machine, check if monitoring is working,
-  enable / repair hooks-based monitoring for any local coding agent, or (as an
-  ADMIN) bulk-provision coding-agent monitoring for a whole team or device fleet.
-  TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, monitor this tool,
-  monitor claude code, monitor codex, monitor cursor, monitor gemini cli, monitor antigravity,
-  codex cli, cursor hooks, gemini cli, gemini-cli hooks, antigravity cli, antigravity, agy,
-  local coding agent, local agent monitoring, olakai hooks, olakai monitor init,
-  olakai monitor list, olakai monitor doctor, olakai monitor repair, monitor
-  workspace, track sessions, is my monitoring working, monitoring not working,
-  no events from claude code, claude code monitoring, codex monitoring,
-  cursor monitoring, agents mine, where am i monitoring, bulk provision,
-  bulk-provision, fleet rollout, intune, jamf, mdm, provision my team, admin monitor,
-  install-hooks, home key file.
-  DO NOT load for: instrumenting your own agent's SDK code (use olakai-integrate),
-  creating agents from scratch with custom code (use olakai-new-project),
-  generic SDK / KPI / event troubleshooting unrelated to a coding tool
-  (use olakai-troubleshoot).
+  Claude Code, OpenAI Codex CLI, Cursor, Google Gemini CLI, or Antigravity CLI.
+  Installs hooks, creates the agent record, and enriches events with KPIs.
+  This is the skill for "monitor my coding tool itself".
+  AUTO-INVOKE for any request to start, inspect, extend or fix hooks-based
+  monitoring of a local coding assistant: monitor this tool or its sessions,
+  confirm monitoring is working, see what is monitored on this machine, or (as
+  an ADMIN) bulk-provision coding-agent monitoring across a team or fleet.
+  TRIGGER KEYWORDS: olakai monitor, monitor my coding tool, local coding agent,
+  olakai hooks, olakai monitor init, bulk-provision, fleet rollout, intune,
+  jamf, mdm.
+  DO NOT load for: instrumenting your own agent's SDK code (use
+  olakai-integrate), building an agent from scratch (use olakai-new-project),
+  or SDK / KPI / event troubleshooting unrelated to a coding tool (use
+  olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.0"
+  version: "1.21.1"
 ---
 
 # Monitor Local Coding Agents with Olakai

@@ -2,39 +2,28 @@
 name: olakai-governance
 description: >
   Read and interpret Olakai AI governance data over MCP — compliance posture,
-  PII/PHI/CODE/SECRET exposure, built-in detector and Governance Policy flags,
-  shadow-AI risk, department accountability, AI-framework gap analysis, and the
-  flagged-interaction triage loop — without misreporting what the numbers mean.
+  PII/PHI/CODE/SECRET exposure, policy and detector flags, framework gaps and
+  flag triage — without misreporting the numbers.
 
-  AUTO-INVOKE when the user asks: are we exposed, how risky is our AI usage,
-  what sensitive data are people pasting into AI tools, governance posture,
-  compliance rate, flagged interactions, policy violations, which department is
-  riskiest, review or dismiss flags, prep an audit answer or security
-  questionnaire, EU AI Act / NIST AI RMF / ISO 42001 coverage, shadow AI
-  exposure, or any reading of Olakai risk, dangerousity, sensitivity,
-  moderation or enforcement data.
+  AUTO-INVOKE when the user asks to analyze my governance risks, are we exposed
+  on PII, PHI, code or secrets, or for any reading of Olakai risk, compliance,
+  flagged interactions, policy violations or audit readiness.
 
-  TRIGGER KEYWORDS: olakai, governance, exposed, exposure, risk, risky prompts,
-  dangerousity, compliance rate, governance compliance, flagged, flagged
-  interactions, violation, violations, policy risk, built-in risk, PII, PHI,
-  secrets, credentials, API key leak, data leak, sensitive prompts, moderation
-  status, false positive, triage, audit, auditor, infosec questionnaire,
-  EU AI Act, NIST AI RMF, ISO 42001, shadow AI, unsanctioned AI, enforcement,
-  policy reminder, department risk.
+  TRIGGER KEYWORDS: olakai, governance, exposed, dangerousity, flagged, shadow
+  AI, department risk, audit, auditor.
 
   CRITICAL: Olakai governance is POST-HOC DETECTION over METADATA ONLY. It
-  never blocks a prompt, and no prompt or response text is returned on this
-  connection. Dangerousity (0-1) and PII+ sensitivity are two separate scales
-  and must never be averaged or compared. Most governance numbers have a
-  denominator smaller than the window — load this skill before answering, or
-  the answer will be confidently wrong.
+  never blocks a prompt and returns no prompt text. Dangerousity (0-1) and PII+
+  sensitivity are separate scales, never averaged. Most numbers have a
+  denominator smaller than the window — load this skill before answering or the
+  answer will be confidently wrong.
 
-  DO NOT load for: SDK setup (olakai-integrate), CLI analytics and KPI reports
+  DO NOT load for: SDK setup (olakai-integrate), CLI KPI reports
   (olakai-reports), or debugging missing events (olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.1"
+  version: "1.1.2"
 ---
 
 # Olakai AI Governance (over MCP)
