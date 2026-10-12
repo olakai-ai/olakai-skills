@@ -15,6 +15,8 @@ Official plugin for integrating AI agents with [Olakai](https://olakai.ai) - the
 | **olakai-monitor-doctor** | Self-heal a coding tool's monitoring — `olakai monitor list` / `doctor [--fix]` / `repair` |
 | **olakai-status** | In-terminal Coding IQ digest — monitoring health, personal spend, and budget (`/olakai`) |
 | **olakai-tune-my-setup** | Diff your AI Fluency report against your ACTUAL local agent config, propose two or three specific changes, show each as a diff, apply only on approval |
+| **olakai-governance** | Read and interpret AI governance data over the **Olakai MCP connector** — exposure, compliance, shadow AI, audit prep, flag triage. Drives MCP rather than the CLI |
+| **olakai-finops** | Read and interpret AI **cost** data over the **Olakai MCP connector** — spend, unit economics, showback, anomalies, budgets and forecasts, ROI. Drives MCP rather than the CLI |
 
 ## Agent Included
 

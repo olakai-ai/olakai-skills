@@ -19,6 +19,7 @@ npx add-skill olakai-ai/olakai-skills/olakai-integrate
 npx add-skill olakai-ai/olakai-skills/olakai-troubleshoot
 npx add-skill olakai-ai/olakai-skills/olakai-reports
 npx add-skill olakai-ai/olakai-skills/olakai-governance
+npx add-skill olakai-ai/olakai-skills/olakai-finops
 ```
 
 ### Manual Installation
@@ -44,6 +45,7 @@ git clone https://github.com/olakai-ai/olakai-skills .claude/skills/olakai-skill
 | **olakai-monitor-doctor** | Self-heal a coding tool's monitoring — `olakai monitor list` / `doctor [--fix]` / `repair` |
 | **olakai-tune-my-setup** | Diff your AI Fluency report against your ACTUAL local agent config, propose two or three specific changes, show each as a diff, apply only on approval |
 | **olakai-governance** | Read and interpret AI governance data over the **Olakai MCP connector** — exposure, compliance, shadow AI, audit prep, flag triage. The only skill here that drives MCP rather than the CLI |
+| **olakai-finops** | Read and interpret AI **cost** data over the **Olakai MCP connector** — spend posture, unit economics, allocation and showback, anomalies, budget variance and forecasts, model-mix optimization, ROI. The second MCP-driven skill, alongside olakai-governance |
 
 ## Bundled Agent
 
