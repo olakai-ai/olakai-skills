@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.12.1"
 ---
 
 # Olakai Implementation Planning Guide
@@ -108,6 +108,12 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 | Something not working | `/olakai-troubleshoot` | Diagnose missing events, wrong KPIs, SDK errors |
 | Generate usage reports | `/olakai-reports` | Terminal-based analytics without web UI |
 | Create implementation plan | `/olakai-planning` | This skill - structure plans for context clearing |
+| Monitor the coding tool itself | `/olakai-monitor-local-coding-agent` | Hooks for Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI |
+| Coding-tool monitoring is broken | `/olakai-monitor-doctor` | `monitor list` / `doctor --fix` / `repair`, drift and agent-lifecycle diagnosis |
+| Personal spend / budget / monitoring health | `/olakai-status` | In-terminal Coding IQ digest |
+| Change the agent's own config from measured fluency | `/olakai-tune-my-setup` | Diffs the AI Fluency report against the real local setup |
+| Read risk / compliance / exposure data | `/olakai-governance` | **Over MCP, not the CLI** — posture, PII+, flags, framework gaps |
+| Read cost / spend / ROI data | `/olakai-finops` | **Over MCP, not the CLI** — spend posture, budgets, forecasts, AI ROI |
 
 **Every step involving Olakai work MUST specify which skill to invoke.**
 
@@ -252,7 +258,7 @@ olakai activity sessions --agent-id ID [--json]  # Session decoration diagnostic
 
 # KPIs (agent-specific: each KPI belongs to ONE agent, cannot be shared)
 olakai kpis list --agent-id ID [--json]
-olakai kpis create --name "Name" --formula "X" --agent-id ID
+olakai kpis create --name "Name" --formula "X" --scope PROMPT_REQUEST --agent-id ID
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis update KPI_ID --formula "X"
 
@@ -332,11 +338,13 @@ Create KPI formulas using CustomDataConfig field names as variables. Variable na
 AGENT_ID=$(olakai agents list --json | jq -r '.[0].id')
 
 # Create KPIs
-olakai kpis create --name "Avg Resolution Time" --formula "AVG(resolutionTime)" --agent-id $AGENT_ID
-olakai kpis create --name "CSAT Score" --formula "AVG(customerSatisfaction)" --agent-id $AGENT_ID
+olakai kpis create --name "Avg Resolution Time" --formula "resolutionTime" \
+  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
+olakai kpis create --name "CSAT Score" --formula "customerSatisfaction" \
+  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
 
 # Verify formulas are valid
-olakai kpis validate --formula "AVG(resolutionTime)" --agent-id $AGENT_ID
+olakai kpis validate --formula "resolutionTime" --agent-id $AGENT_ID
 ```
 
 ### Validation:
@@ -415,6 +423,7 @@ olakai activity get $EVENT_ID --json | jq '{customData, kpiData}'
     "resolutionTime": 45,
     "customerSatisfaction": 4
   },
+  // keyed by KPI definition id in a real payload; names shown for readability
   "kpiData": {
     "Avg Resolution Time": 45,
     "CSAT Score": 4
