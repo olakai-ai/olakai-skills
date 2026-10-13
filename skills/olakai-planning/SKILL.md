@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.12.2"
 ---
 
 # Olakai Implementation Planning Guide
@@ -108,6 +108,12 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 | Something not working | `/olakai-troubleshoot` | Diagnose missing events, wrong KPIs, SDK errors |
 | Generate usage reports | `/olakai-reports` | Terminal-based analytics without web UI |
 | Create implementation plan | `/olakai-planning` | This skill - structure plans for context clearing |
+| Monitor the coding tool itself | `/olakai-monitor-local-coding-agent` | Hooks for Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI |
+| Coding-tool monitoring is broken | `/olakai-monitor-doctor` | `monitor list` / `doctor --fix` / `repair`, drift and agent-lifecycle diagnosis |
+| Personal spend / budget / monitoring health | `/olakai-status` | In-terminal Coding IQ digest |
+| Change the agent's own config from measured fluency | `/olakai-tune-my-setup` | Diffs the AI Fluency report against the real local setup |
+| Read risk / compliance / exposure data | `/olakai-governance` | **Over MCP, not the CLI** — posture, PII+, flags, framework gaps |
+| Read cost / spend / ROI data | `/olakai-finops` | **Over MCP, not the CLI** — spend posture, budgets, forecasts, AI ROI |
 
 **Every step involving Olakai work MUST specify which skill to invoke.**
 
@@ -415,6 +421,7 @@ olakai activity get $EVENT_ID --json | jq '{customData, kpiData}'
     "resolutionTime": 45,
     "customerSatisfaction": 4
   },
+  // keyed by KPI definition id in a real payload; names shown for readability
   "kpiData": {
     "Avg Resolution Time": 45,
     "CSAT Score": 4

@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.2"
+  version: "1.12.4"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -220,7 +220,7 @@ olakai agents create \
 #   "id": "cmkbteqn501kyjy4yu6p6xrrx",
 #   "name": "Your Agent Name",
 #   "workflowId": "wfl_xxx...",
-#   "apiKey": "sk_agent_xxxxx..."   <-- Use this in your SDK
+#   "apiKey": "3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40"   <-- a UUID; use it in your SDK
 # }
 
 # To retrieve an existing agent's API key:
@@ -332,7 +332,7 @@ olakai kpis list --agent-id YOUR_AGENT_ID
 # Look for slot KPIs: Execution Cost, Time Saved, Value Created, Governance Compliance
 ```
 
-**If the Time Saved classifier is missing (e.g., agent created via CLI), add it manually:**
+**Agent creation provisions all five metric slots, Time Saved included** — `provisionMetricSlots()` runs for every path (UI, CLI, Kai, SDK), so a CLI-created agent does get the CHAT-scope classifier. Verify rather than assume it is absent: `olakai kpis list --agent-id AGENT_ID --json`. If it genuinely is missing, add it manually:**
 ```bash
 olakai kpis create --name "Time Saved" \
   --calculator-id classifier --template-id time_saved_estimator \
@@ -746,6 +746,7 @@ $ olakai activity get cmkeyyy --json | jq '{customData, kpiData}'
     "ItemsProcessed": 5,
     "SuccessRate": 1
   },
+  // keyed by KPI definition id in a real payload; names shown for readability
   "kpiData": {
     "Steps Executed": 3,        # ✅ Numeric
     "Items Processed": 5,       # ✅ Numeric
