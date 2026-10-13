@@ -1,15 +1,16 @@
 ---
 name: olakai-monitor-claude-code
 description: |
-  Renamed to olakai-monitor-local-coding-agent. This skill now covers all three
-  local coding agents (Claude Code, Codex CLI, Cursor) under one entry point.
+  Renamed to olakai-monitor-local-coding-agent. This skill now covers five
+  local coding agents (Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity
+  CLI) under one entry point.
   Existing plugin installs that reference olakai-monitor-claude-code continue
   to resolve here so they don't break — but the canonical, up-to-date guidance
   lives in olakai-monitor-local-coding-agent. Load that skill instead.
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.0"
+  version: "1.16.1"
 ---
 
 # Renamed: olakai-monitor-claude-code → olakai-monitor-local-coding-agent

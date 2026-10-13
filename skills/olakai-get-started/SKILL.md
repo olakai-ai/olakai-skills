@@ -325,7 +325,7 @@ olakai agents create \
 {
   "id": "cmkbteqn501kyjy4yu6p6xrrx",
   "name": "My First Agent",
-  "apiKey": "sk_agent_xxxxx..."
+  "apiKey": "3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40"   // a UUID — not an "sk_" prefixed key
 }
 ```
 
@@ -333,12 +333,12 @@ olakai agents create \
 
 ```bash
 # Add to your shell profile (.bashrc, .zshrc, etc.)
-export OLAKAI_API_KEY="sk_agent_xxxxx..."
+export OLAKAI_API_KEY="3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40"
 ```
 
 Or add to your project's `.env` file:
 ```
-OLAKAI_API_KEY=sk_agent_xxxxx...
+OLAKAI_API_KEY=3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40
 ```
 
 ### 4.3 Retrieve API Key Later
@@ -500,7 +500,7 @@ olakai kpis create \
   --aggregation SUM
 ```
 
-> **Note:** KPIs are created per-agent. If you later create additional agents, you'll need to create KPIs for each one separately — they can't be shared across agents. CustomDataConfigs, on the other hand, are account-level and shared.
+> **Note:** KPIs are created per-agent. If you later create additional agents, you'll need to create KPIs for each one separately — they can't be shared across agents. CustomDataConfigs are **agent-scoped**, like KPIs: `CustomDataConfig.agentId` became required for new configs on 2026-01-30, and `olakai custom-data create` makes `--agent-id` mandatory. Only legacy rows written before that migration have `agentId = NULL` and behave account-wide. So a new agent needs its own configs — do not assume existing ones cover it.
 
 ### Learn More
 

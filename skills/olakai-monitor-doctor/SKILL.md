@@ -18,7 +18,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.1"
+  version: "1.21.2"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -210,7 +210,7 @@ Ask the user before you run the upgrade on the first line. Run it only after the
 ```bash
 npm install -g olakai-cli@latest                 # 0.x npm installs only; on 1.x run olakai update
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
-olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
+olakai monitor doctor --tool claude-code --fix   # attempts to migrate the hooks to .claude/settings.local.json
 ```
 
 **The version check is not optional here.** See [Check your CLI version before migrating](#check-your-cli-version-before-migrating). On 0.13.0 the same `--fix` puts the hooks back into `.claude/settings.json` and reports success, which recreates the exact problem you are fixing.

@@ -19,7 +19,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.1"
+  version: "1.21.2"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -517,7 +517,7 @@ Plus the composite: **ROI** = Value Created / Execution Cost.
 olakai kpis list --agent-id AGENT_ID
 ```
 
-If the Time Saved classifier is missing (can happen for CLI-created agents), add it manually:
+Agent creation provisions all five metric slots, Time Saved included, on every path. If it is genuinely missing (verify with `olakai kpis list --agent-id AGENT_ID --json`, do not assume — this used to be stated as expected for CLI-created agents), add it manually:
 
 ```bash
 olakai kpis create --name "Time Saved" \

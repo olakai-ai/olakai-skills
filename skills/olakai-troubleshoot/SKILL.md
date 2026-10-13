@@ -90,9 +90,11 @@ Events from your agent aren't showing up in `olakai activity list` or the dashbo
 # Check environment variable is set
 echo $OLAKAI_API_KEY
 
-# Should start with "sk_" and be ~40+ characters
+# A key is a UUID (36 characters, 8-4-4-4-12 hex). There is no "sk_" prefix:
+# `SdkApiKey.key` is `@default(uuid())`. A key that looks like "sk_..." is not
+# one this platform issued.
 # If empty or wrong, set it:
-export OLAKAI_API_KEY="sk_your_key_here"
+export OLAKAI_API_KEY="3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40"
 ```
 
 **2. Check SDK Initialization**
@@ -139,7 +141,15 @@ curl -X POST "https://app.olakai.ai/api/monitoring/prompt" \
   }'
 ```
 
-Expected: `200 OK` with event ID
+Expected: `200 OK` with a counts-only body:
+
+```json
+{"success": true, "totalRequests": 1, "successCount": 1, "failureCount": 0, "message": "All prompt requests logged successfully"}
+```
+
+**No event ID is returned** — do not wait for one or try to read it. To confirm
+the event landed, poll `olakai activity list --limit 1 --json` instead.
+
 If `401`: Invalid API key
 If `400`: Check request format
 
@@ -167,6 +177,10 @@ curl -I https://app.olakai.ai/api/health
 
 ### Symptom
 KPI values display as `"VariableName"` instead of numeric values like `42`.
+> **`kpiData` is keyed by KPI definition id, not by KPI name.** The names below
+> are readable placeholders; a real payload looks like `{"cmk9x2p0a0001": 20}`.
+> Map ids to names with `olakai kpis list --agent-id AGENT_ID --json`. The point of
+> the example is the VALUE type, which is what goes wrong.
 
 Example:
 ```json
@@ -476,7 +490,7 @@ When creating a new agent, always:
 2. Create KPIs explicitly for the new agent — don't assume they exist from another agent
 3. Verify with `olakai kpis list --agent-id NEW_AGENT_ID`
 
-> **Note:** CustomDataConfigs do NOT need to be recreated — they are account-level and shared. Only KPIs are agent-specific.
+> **Note:** CustomDataConfigs are **agent-scoped**, like KPIs: `CustomDataConfig.agentId` became required for new configs on 2026-01-30, and `olakai custom-data create` makes `--agent-id` mandatory. Only legacy rows written before that migration have `agentId = NULL` and behave account-wide. So a new agent needs its own configs — do not assume existing ones cover it.
 
 ---
 
@@ -773,7 +787,7 @@ olakai whoami
 **3. Check Credentials File**
 ```bash
 ls -la ~/.config/olakai/
-cat ~/.config/olakai/credentials.json
+cat ~/.config/olakai/profiles.json
 ```
 
 Should contain `accessToken` and `refreshToken`.
@@ -951,7 +965,7 @@ olakai whoami && olakai activity list --limit 1 && echo "OK"
 
 ```
 Events not appearing?
-├── Check API key is set → export OLAKAI_API_KEY=sk_...
+├── Check API key is set → export OLAKAI_API_KEY=<uuid>
 ├── Check SDK initialized → await olakai.init()
 ├── Enable debug mode → debug: true
 └── Test direct API → curl POST /api/monitoring/prompt
