@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.2"
+  version: "1.18.3"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -467,6 +467,7 @@ olakai kpis create \
   --name "Documents Processed" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "IF(Success = 1, 1, 0)" \
   --aggregation SUM
 
@@ -474,6 +475,7 @@ olakai kpis create \
   --name "Avg Steps per Document" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "StepCount" \
   --aggregation AVERAGE
 ```

@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.2"
+  version: "1.18.3"
 ---
 
 # Get Started with Olakai
@@ -495,6 +495,7 @@ olakai kpis create \
   --name "High Priority Events" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "IF(Priority == 1, 1, 0)" \
   --aggregation SUM
 ```

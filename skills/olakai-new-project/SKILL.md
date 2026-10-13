@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.2"
+  version: "1.12.3"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -359,6 +359,7 @@ olakai kpis create \
   --name "Items Processed" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "ItemsProcessed" \
   --unit "items" \
   --aggregation SUM
@@ -368,6 +369,7 @@ olakai kpis create \
   --name "Success Rate" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "SuccessRate * 100" \
   --unit "%" \
   --aggregation AVERAGE
@@ -377,6 +379,7 @@ olakai kpis create \
   --name "Error Count" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "IF(SuccessRate < 1, 1, 0)" \
   --unit "errors" \
   --aggregation SUM
@@ -831,7 +834,7 @@ Use these predefined task categories for the `task` field:
 olakai login                           # Authenticate
 olakai agents create --name "Name"     # Create agent
 olakai custom-data create --agent-id ID --name X --type NUMBER  # Create custom field
-olakai kpis create --formula "X" --agent-id ID    # Create KPI
+olakai kpis create --name "N" --formula "X" --scope PROMPT_REQUEST --agent-id ID   # Create KPI
 olakai activity list --agent-id ID     # View events
 
 # SDK Initialization (TypeScript)

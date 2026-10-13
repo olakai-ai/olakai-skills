@@ -31,6 +31,15 @@ echo ""
 ./scripts/validate-arg-substitution-selftest.sh || status=1
 
 echo ""
+# Worked CLI examples must actually run: the API requires --scope on
+# `kpis create` and the CLI has no default (OLA-1611).
+./scripts/validate-cli-examples.sh || status=1
+echo ""
+# …and its gate has a gate: a per-line grep would pass every multi-line
+# command, which is the dominant form in these skills.
+./scripts/validate-cli-examples-selftest.sh || status=1
+
+echo ""
 echo "=== Verifying symlinks ==="
 for link in plugins/olakai/skills/*/; do
   link="${link%/}"

@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.0"
+  version: "1.12.1"
 ---
 
 # Olakai Implementation Planning Guide
@@ -252,7 +252,7 @@ olakai activity sessions --agent-id ID [--json]  # Session decoration diagnostic
 
 # KPIs (agent-specific: each KPI belongs to ONE agent, cannot be shared)
 olakai kpis list --agent-id ID [--json]
-olakai kpis create --name "Name" --formula "X" --agent-id ID
+olakai kpis create --name "Name" --formula "X" --scope PROMPT_REQUEST --agent-id ID
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis update KPI_ID --formula "X"
 
@@ -332,11 +332,13 @@ Create KPI formulas using CustomDataConfig field names as variables. Variable na
 AGENT_ID=$(olakai agents list --json | jq -r '.[0].id')
 
 # Create KPIs
-olakai kpis create --name "Avg Resolution Time" --formula "AVG(resolutionTime)" --agent-id $AGENT_ID
-olakai kpis create --name "CSAT Score" --formula "AVG(customerSatisfaction)" --agent-id $AGENT_ID
+olakai kpis create --name "Avg Resolution Time" --formula "resolutionTime" \
+  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
+olakai kpis create --name "CSAT Score" --formula "customerSatisfaction" \
+  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
 
 # Verify formulas are valid
-olakai kpis validate --formula "AVG(resolutionTime)" --agent-id $AGENT_ID
+olakai kpis validate --formula "resolutionTime" --agent-id $AGENT_ID
 ```
 
 ### Validation:
