@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.1"
+  version: "1.18.2"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -263,6 +263,7 @@ olakai kpis create \
   --name "Tools Discovered" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "ToolsDiscovered" \
   --aggregation SUM
 ```
@@ -455,6 +456,7 @@ olakai kpis create \
   --name "Items Processed" \
   --agent-id AGENT_B_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "ItemsProcessed" \
   --aggregation SUM
 
@@ -462,6 +464,7 @@ olakai kpis create \
   --name "Success Rate" \
   --agent-id AGENT_B_ID \
   --calculator-id formula \
+  --scope PROMPT_REQUEST \
   --formula "SuccessRate * 100" \
   --aggregation AVERAGE
 ```
