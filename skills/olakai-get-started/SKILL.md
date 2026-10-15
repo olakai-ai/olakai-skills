@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.2"
+  version: "1.18.3"
 ---
 
 # Get Started with Olakai
@@ -325,7 +325,7 @@ olakai agents create \
 {
   "id": "cmkbteqn501kyjy4yu6p6xrrx",
   "name": "My First Agent",
-  "apiKey": "sk_agent_xxxxx..."
+  "apiKey": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57"
 }
 ```
 
@@ -333,12 +333,12 @@ olakai agents create \
 
 ```bash
 # Add to your shell profile (.bashrc, .zshrc, etc.)
-export OLAKAI_API_KEY="sk_agent_xxxxx..."
+export OLAKAI_API_KEY="3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57"
 ```
 
 Or add to your project's `.env` file:
 ```
-OLAKAI_API_KEY=sk_agent_xxxxx...
+OLAKAI_API_KEY=3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57
 ```
 
 ### 4.3 Retrieve API Key Later
@@ -496,10 +496,11 @@ olakai kpis create \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
   --formula "IF(Priority == 1, 1, 0)" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 ```
 
-> **Note:** KPIs are created per-agent. If you later create additional agents, you'll need to create KPIs for each one separately — they can't be shared across agents. CustomDataConfigs, on the other hand, are account-level and shared.
+> **Note:** Both KPIs and CustomDataConfigs are created per-agent (`custom-data create` requires `--agent-id`). If you later create additional agents, you'll need to create the custom data configs and the KPIs again for each one — neither can be shared across agents.
 
 ### Learn More
 

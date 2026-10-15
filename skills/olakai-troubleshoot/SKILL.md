@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.1"
+  version: "1.18.2"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -139,7 +139,7 @@ curl -X POST "https://app.olakai.ai/api/monitoring/prompt" \
   }'
 ```
 
-Expected: `200 OK` with event ID
+Expected: `200 OK` with `{"success":true,"totalRequests":1,"successCount":1,"failureCount":0,...}` — the response carries no event ID; find the event with `olakai activity list --agent-id ID --limit 1 --json`
 If `401`: Invalid API key
 If `400`: Check request format
 
@@ -168,19 +168,19 @@ curl -I https://app.olakai.ai/api/health
 ### Symptom
 KPI values display as `"VariableName"` instead of numeric values like `42`.
 
-Example:
+Example (keys are KPI definition ids, not names — map them with `olakai kpis list --agent-id ID --json | jq '.[] | {id, name}'`):
 ```json
 "kpiData": {
-  "Tools Discovered": "ToolsDiscovered",  // Wrong: string
-  "New Tools Found": "NewToolsFound"       // Wrong: string
+  "cmkf1a2b3c4d5e6f7g8h9i0p": "ToolsDiscovered",  // Wrong: string ("Tools Discovered")
+  "cmkf1a2b3c4d5e6f7g8h9i0q": "NewToolsFound"      // Wrong: string ("New Tools Found")
 }
 ```
 
 Should be:
 ```json
 "kpiData": {
-  "Tools Discovered": 20,  // Correct: number
-  "New Tools Found": 3     // Correct: number
+  "cmkf1a2b3c4d5e6f7g8h9i0p": 20,  // Correct: number
+  "cmkf1a2b3c4d5e6f7g8h9i0q": 3    // Correct: number
 }
 ```
 
@@ -264,6 +264,7 @@ olakai kpis create \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
   --formula "ToolsDiscovered" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 ```
 
@@ -456,6 +457,7 @@ olakai kpis create \
   --agent-id AGENT_B_ID \
   --calculator-id formula \
   --formula "ItemsProcessed" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 
 olakai kpis create \
@@ -463,6 +465,7 @@ olakai kpis create \
   --agent-id AGENT_B_ID \
   --calculator-id formula \
   --formula "SuccessRate * 100" \
+  --scope PROMPT_REQUEST \
   --aggregation AVERAGE
 ```
 
@@ -473,7 +476,7 @@ When creating a new agent, always:
 2. Create KPIs explicitly for the new agent — don't assume they exist from another agent
 3. Verify with `olakai kpis list --agent-id NEW_AGENT_ID`
 
-> **Note:** CustomDataConfigs do NOT need to be recreated — they are account-level and shared. Only KPIs are agent-specific.
+> **Note:** CustomDataConfigs are agent-scoped too (`custom-data create` requires `--agent-id`), so recreate the fields the second agent sends before its KPIs: `olakai custom-data create --agent-id AGENT_B_ID --name ItemsProcessed --type NUMBER`.
 
 ---
 
@@ -543,10 +546,12 @@ KPI values are `null` instead of numbers.
 
 ```json
 "kpiData": {
-  "Success Rate": null,
-  "Items Processed": null
+  "cmkf1a2b3c4d5e6f7g8h9i0l": null,   // "Success Rate"
+  "cmkf1a2b3c4d5e6f7g8h9i0k": null    // "Items Processed"
 }
 ```
+
+(`kpiData` is keyed by KPI definition id; map ids to names with `olakai kpis list --agent-id ID --json | jq '.[] | {id, name}'`.)
 
 ### Root Cause Options
 
@@ -770,10 +775,10 @@ olakai whoami
 **3. Check Credentials File**
 ```bash
 ls -la ~/.config/olakai/
-cat ~/.config/olakai/credentials.json
+cat ~/.config/olakai/profiles.json
 ```
 
-Should contain `accessToken` and `refreshToken`.
+Should contain a `profiles` map with at least one entry carrying `host` and `token` (plus `expiresAt`, `email`, `accountId`), and a `default` naming the active profile. `credentials.json` is only the pre-profiles legacy file; the CLI reads it only when `profiles.json` does not exist.
 
 **4. Check Environment**
 ```bash
@@ -989,7 +994,7 @@ Classifier KPI showing null or not updating?
 ROI shows same $ value for every prompt?
 ├── Check Time Saved slot KPI has classifier → olakai kpis list --agent-id ID --json
 ├── No classifier KPI → olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID
-├── Agent created via CLI → CLI may not auto-provision classifier for Time Saved slot, add manually
+├── Agent predates slot provisioning → classifier was never provisioned, add manually (CLI-created agents get it automatically today)
 └── Classifier exists but still flat → Check sessionId grouping, wait for chat decoration
 
 Shadow AI ROI shows same value for all apps?
