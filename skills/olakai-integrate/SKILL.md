@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.2"
+  version: "1.18.3"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -468,6 +468,7 @@ olakai kpis create \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
   --formula "IF(Success = 1, 1, 0)" \
+  --scope PROMPT_REQUEST \
   --aggregation SUM
 
 olakai kpis create \
@@ -475,6 +476,7 @@ olakai kpis create \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
   --formula "StepCount" \
+  --scope PROMPT_REQUEST \
   --aggregation AVERAGE
 ```
 
@@ -784,11 +786,13 @@ $ olakai activity get cmkeabc123 --json | jq '{customData, kpiData}'
     "department": "Engineering"
   },
   "kpiData": {
-    "Response Quality": 8.5
+    "cmkf1a2b3c4d5e6f7g8h9i0m": 8.5
   }
 }
 
 # ✅ All values present and numeric - integration working!
+# kpiData is keyed by KPI definition id, not name. Map ids to names with:
+#   olakai kpis list --agent-id YOUR_AGENT_ID --json | jq '.[] | {id, name}'
 ```
 
 ## ROI Measurement
@@ -814,7 +818,7 @@ olakai kpis list --agent-id YOUR_AGENT_ID
 # Look for slot KPIs: Execution Cost, Time Saved, Value Created, Governance Compliance
 ```
 
-**If the Time Saved classifier is missing (e.g., agent created via CLI), add it manually:**
+**If the Time Saved classifier is missing, add it manually.** Every creation path (dashboard, CLI `agents create`, `monitor init`, SDK, Kai) auto-provisions it today; it is only absent on agents created before slot provisioning existed:
 ```bash
 olakai kpis create --name "Time Saved" \
   --calculator-id classifier --template-id time_saved_estimator \

@@ -19,7 +19,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.1"
+  version: "1.21.2"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -517,7 +517,7 @@ Plus the composite: **ROI** = Value Created / Execution Cost.
 olakai kpis list --agent-id AGENT_ID
 ```
 
-If the Time Saved classifier is missing (can happen for CLI-created agents), add it manually:
+If the Time Saved classifier is missing, add it manually. `agents create` and `monitor init` auto-provision it today, so this only applies to agents created before slot provisioning existed:
 
 ```bash
 olakai kpis create --name "Time Saved" \
@@ -581,7 +581,7 @@ These act on the agent record on the Olakai backend, across all machines — not
 olakai agents archive AGENT_ID                # hide an agent you no longer use
 olakai agents archive AGENT_ID --unarchive    # bring it back
 olakai agents rename AGENT_ID "New Name"      # rename
-olakai agents delete AGENT_ID                 # permanent delete
+olakai agents delete AGENT_ID                 # also a soft delete: archives the agent (no CLI command destroys one)
 ```
 
 > **Backend requirement:** `agents archive` / `rename` require a current Olakai backend (self-owner lifecycle support shipped alongside these CLI commands). Against older backends these are admin-only and `archive` may no-op silently — if archive appears to do nothing, your backend predates the feature.
