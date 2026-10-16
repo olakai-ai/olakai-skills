@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.3"
+  version: "1.12.4"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -220,11 +220,20 @@ olakai agents create \
 #   "id": "cmkbteqn501kyjy4yu6p6xrrx",
 #   "name": "Your Agent Name",
 #   "workflowId": "wfl_xxx...",
-#   "apiKey": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57"   <-- a UUID; use this in your SDK
+#   "apiKey": {
+#     "id": "...",
+#     "key": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57",   <-- a UUID; use this in your SDK
+#     "keyMasked": "...",
+#     "isActive": true
+#   }
 # }
+# Extract the key: add | jq -r '.apiKey.key' to the create command.
 
-# To retrieve an existing agent's API key:
-olakai agents get AGENT_ID --json | jq '.apiKey'
+# The full key is shown only once, in this create output.
+# `olakai agents get AGENT_ID --json` returns only apiKey.keyMasked.
+# Lost the key? Copy it from the agent's card in the web UI:
+# Global Settings > Configuration & Controls > Agents (Generate if it has none).
+# Needs admin access; otherwise ask an admin.
 ```
 
 **Workflow → Agent Hierarchy:**

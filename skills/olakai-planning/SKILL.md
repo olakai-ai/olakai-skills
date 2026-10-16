@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.1"
+  version: "1.12.2"
 ---
 
 # Olakai Implementation Planning Guide
@@ -155,7 +155,7 @@ Key rules:
 4. Field names in SDK must EXACTLY match CustomDataConfig names
 5. KPIs are UNIQUE PER AGENT — each KPI belongs to one agent only
 6. If multiple agents need the same KPI, create it separately for each
-7. CustomDataConfigs are account-level (shared), but KPIs are agent-level (NOT shared)
+7. CustomDataConfigs and KPIs are both per agent (`--agent-id` required). Config names are unique per account, so a second agent needs different field names
 
 What NOT to send in customData (already tracked):
 - sessionId, agentId (automatic)

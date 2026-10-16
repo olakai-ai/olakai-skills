@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.3"
+  version: "1.18.4"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -35,7 +35,7 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 
 - Existing working AI agent/application using OpenAI, Anthropic, or other LLM
 - Olakai CLI installed and authenticated. If it is not, ask the user, then run `npm install -g olakai-cli && olakai login` after they say yes. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
-- Olakai API key for your agent (get via CLI: `olakai agents get AGENT_ID --json | jq '.apiKey'`)
+- Olakai API key for your agent. The full key is shown once, in the `agents create --with-api-key` output. `agents get` returns only `apiKey.keyMasked`. Later, copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (admin access; otherwise ask an admin) (click Generate if it has none).
 - Node.js 18+ (for TypeScript) or Python 3.7+ (for Python)
 
 > **Note:** Each agent can have its own API key. Create one with `olakai agents create --name "Name" --with-api-key`
@@ -138,6 +138,24 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 ```
 
 **That's it!** All calls through `client` are now automatically tracked.
+
+**Python SDK 1.7.0 additions** (need `olakai-sdk>=1.7.0`, not yet released):
+
+- **Sync clients work.** In 1.6 and earlier, the SDK drops events sent from sync code that has no running asyncio event loop. 1.7.0 sends events from a background thread, so sync `OpenAI()` calls and `olakai_event()` from plain scripts are reported.
+- **`olakai_flush(timeout=5.0) -> bool`.** Call it before a script or serverless handler exits. It waits until queued events are sent or the timeout passes. It returns `True` when the queue is empty. The SDK also calls it at normal interpreter exit.
+- **`OlakaiEventParams.modelName`.** Optional model name for manual events. The SDK omits it from the payload when it is `None`.
+- **`capture_api_keys` is deprecated.** It has no effect. The SDK never sends provider API keys. Remove it from `instrument_*()` calls.
+
+```python
+from olakaisdk import olakai_event, olakai_flush, OlakaiEventParams
+
+olakai_event(OlakaiEventParams(
+    prompt="input",
+    response="output",
+    modelName="gpt-4o",  # olakai-sdk>=1.7.0
+))
+olakai_flush()  # olakai-sdk>=1.7.0: send queued events before exit
+```
 
 ---
 
@@ -278,15 +296,17 @@ olakai.event({
 
 Python:
 ```python
-with olakai_context(
+from olakaisdk import olakai_event, OlakaiEventParams
+
+olakai_event(OlakaiEventParams(
+    prompt=user_message,
+    response=ai_response,
     userEmail=user.email,
     sessionId=conversation_id,  # groups turns in the same conversation
-):
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": user_message}]
-    )
+))
 ```
+
+> **Python note:** `olakai_context()` has no `sessionId` parameter. Passing one raises `TypeError`. Auto-instrumented calls use one session ID per process (a UUID set by `olakai_config()`). To group turns per conversation, report them with `olakai_event(OlakaiEventParams(..., sessionId=...))`. On olakai-sdk 1.6 and earlier, `olakai_event()` drops the event when no asyncio event loop is running, so call it from async code. On 1.7.0 and later it works from sync code too.
 
 > **When to use `sessionId`:** If your agent handles multi-turn conversations and you want KPIs that evaluate the entire conversation (e.g., sentiment scoring, satisfaction), pass a consistent `sessionId` across all turns. For single-shot agentic workflows, session grouping is automatic and you typically do not need to set this explicitly.
 
@@ -934,15 +954,17 @@ olakai.event({
 olakai_config(api_key)
 instrument_openai()
 
-# Context for calls (sessionId groups conversation turns, taskExecutionId links events across agents)
-with olakai_context(userEmail="user@example.com", sessionId="conversation-id", taskExecutionId="uuid-from-orchestrator", task="Support"):
+# Context for calls (taskExecutionId links events across agents)
+# olakai_context() takes userEmail, userId, taskExecutionId, task, subTask, customData. It has no sessionId.
+with olakai_context(userEmail="user@example.com", taskExecutionId="uuid-from-orchestrator", task="Support"):
     response = client.chat.completions.create(...)
 
-# Manual event
+# Manual event (sessionId groups conversation turns for CHAT-scoped KPIs)
 olakai_event(OlakaiEventParams(
     prompt="input",
     response="output",
     tokens=1500,
+    sessionId="conversation-id",
     customData={"key": "value"}
 ))
 ```
