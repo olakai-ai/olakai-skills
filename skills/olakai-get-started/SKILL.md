@@ -348,7 +348,7 @@ OLAKAI_API_KEY=3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57
 
 ### 4.3 Lost the API Key?
 
-The CLI cannot show the full key again. `olakai agents get AGENT_ID --json` returns only `apiKey.keyMasked`. Regenerate the key on the agent page in the Olakai web UI, then update `OLAKAI_API_KEY`.
+The CLI cannot show the full key again. `olakai agents get AGENT_ID --json` returns only `apiKey.keyMasked`. Copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (click Generate if it has none), then update `OLAKAI_API_KEY`.
 
 ---
 

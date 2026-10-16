@@ -231,7 +231,8 @@ olakai agents create \
 
 # The full key is shown only once, in this create output.
 # `olakai agents get AGENT_ID --json` returns only apiKey.keyMasked.
-# Lost the key? Regenerate it on the agent page in the Olakai web UI.
+# Lost the key? Copy it from the agent's card in the web UI:
+# Global Settings > Configuration & Controls > Agents (Generate if it has none).
 ```
 
 **Workflow → Agent Hierarchy:**

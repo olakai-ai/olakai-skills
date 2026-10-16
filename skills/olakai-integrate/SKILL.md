@@ -35,7 +35,7 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 
 - Existing working AI agent/application using OpenAI, Anthropic, or other LLM
 - Olakai CLI installed and authenticated. If it is not, ask the user, then run `npm install -g olakai-cli && olakai login` after they say yes. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
-- Olakai API key for your agent. The full key is shown once, in the `agents create --with-api-key` output. `agents get` returns only `apiKey.keyMasked`. To get a new key, regenerate it on the agent page in the Olakai web UI.
+- Olakai API key for your agent. The full key is shown once, in the `agents create --with-api-key` output. `agents get` returns only `apiKey.keyMasked`. Later, copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (click Generate if it has none).
 - Node.js 18+ (for TypeScript) or Python 3.7+ (for Python)
 
 > **Note:** Each agent can have its own API key. Create one with `olakai agents create --name "Name" --with-api-key`

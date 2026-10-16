@@ -472,7 +472,7 @@ When you select an **existing agent** during `olakai monitor init` and the CLI a
 Use the pasted key anyway? (y/n) [n]:
 ```
 
-The default is **abort** — pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, get a fresh key for the right agent (regenerate it on the agent page in the Olakai web UI; `olakai agents get` shows only a masked key), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
+The default is **abort** — pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, get a fresh key for the right agent (copy it from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI; `olakai agents get` shows only a masked key), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
 
 ## Validate via the Golden Rule
 
