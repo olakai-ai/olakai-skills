@@ -233,6 +233,7 @@ olakai agents create \
 # `olakai agents get AGENT_ID --json` returns only apiKey.keyMasked.
 # Lost the key? Copy it from the agent's card in the web UI:
 # Global Settings > Configuration & Controls > Agents (Generate if it has none).
+# Needs admin access; otherwise ask an admin.
 ```
 
 **Workflow → Agent Hierarchy:**

@@ -348,7 +348,7 @@ OLAKAI_API_KEY=3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57
 
 ### 4.3 Lost the API Key?
 
-The CLI cannot show the full key again. `olakai agents get AGENT_ID --json` returns only `apiKey.keyMasked`. Copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (click Generate if it has none), then update `OLAKAI_API_KEY`.
+The CLI cannot show the full key again. `olakai agents get AGENT_ID --json` returns only `apiKey.keyMasked`. Copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (admin access; otherwise ask an admin) (click Generate if it has none), then update `OLAKAI_API_KEY`.
 
 ---
 
@@ -502,7 +502,7 @@ olakai kpis create \
   --aggregation SUM
 ```
 
-> **Note:** Both KPIs and CustomDataConfigs are created per-agent (`custom-data create` requires `--agent-id`). If you later create additional agents, you'll need to create the custom data configs and the KPIs again for each one — neither can be shared across agents. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
+> **Note:** Both KPIs and CustomDataConfigs are created per-agent (`custom-data create` requires `--agent-id`). If you later create additional agents, you'll need to create the custom data configs and the KPIs again for each one. Neither can be shared across agents. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
 
 ### Learn More
 

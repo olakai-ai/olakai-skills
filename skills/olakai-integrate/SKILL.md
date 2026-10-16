@@ -35,7 +35,7 @@ For full SDK documentation, see: https://app.olakai.ai/llms.txt
 
 - Existing working AI agent/application using OpenAI, Anthropic, or other LLM
 - Olakai CLI installed and authenticated. If it is not, ask the user, then run `npm install -g olakai-cli && olakai login` after they say yes. No Node.js 20+? See `/olakai-get-started` for the standalone binary (beta).
-- Olakai API key for your agent. The full key is shown once, in the `agents create --with-api-key` output. `agents get` returns only `apiKey.keyMasked`. Later, copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (click Generate if it has none).
+- Olakai API key for your agent. The full key is shown once, in the `agents create --with-api-key` output. `agents get` returns only `apiKey.keyMasked`. Later, copy the key from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (admin access; otherwise ask an admin) (click Generate if it has none).
 - Node.js 18+ (for TypeScript) or Python 3.7+ (for Python)
 
 > **Note:** Each agent can have its own API key. Create one with `olakai agents create --name "Name" --with-api-key`
@@ -306,7 +306,7 @@ olakai_event(OlakaiEventParams(
 ))
 ```
 
-> **Python note:** `olakai_context()` has no `sessionId` parameter. Passing one raises `TypeError`. Auto-instrumented calls use one session ID per process (a UUID set by `olakai_config()`). To group turns per conversation, report them with `olakai_event(OlakaiEventParams(..., sessionId=...))`.
+> **Python note:** `olakai_context()` has no `sessionId` parameter. Passing one raises `TypeError`. Auto-instrumented calls use one session ID per process (a UUID set by `olakai_config()`). To group turns per conversation, report them with `olakai_event(OlakaiEventParams(..., sessionId=...))`. On olakai-sdk 1.6 and earlier, `olakai_event()` drops the event when no asyncio event loop is running, so call it from async code. On 1.7.0 and later it works from sync code too.
 
 > **When to use `sessionId`:** If your agent handles multi-turn conversations and you want KPIs that evaluate the entire conversation (e.g., sentiment scoring, satisfaction), pass a consistent `sessionId` across all turns. For single-shot agentic workflows, session grouping is automatic and you typically do not need to set this explicitly.
 

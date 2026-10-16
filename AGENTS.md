@@ -46,7 +46,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.21.0)
+│       │   └── plugin.json       # Plugin metadata (version 1.21.1)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -289,8 +289,8 @@ When implementing agents, coding assistants often:
 ### The Correct Sequence
 
 1. **Design metrics** - Decide what fields you need
-2. **Create CustomDataConfigs** - `olakai custom-data create --name X --type NUMBER`
-3. **Create KPIs** - `olakai kpis create --formula "X" --agent-id ID`
+2. **Create CustomDataConfigs** - `olakai custom-data create --agent-id ID --name X --type NUMBER`
+3. **Create KPIs** - `olakai kpis create --name "X KPI" --calculator-id formula --formula "X" --scope PROMPT_REQUEST --agent-id ID`
 4. **THEN write SDK code** - Send only registered fields in customData
 
 ### Scoping: CustomDataConfigs vs KPIs
@@ -302,7 +302,7 @@ When implementing agents, coding assistants often:
 | **Creation** | Create for each agent that needs it | Create separately for each agent |
 | **CLI flag** | `--agent-id` required | `--agent-id` required |
 
-CustomDataConfigs define the schema for fields your SDK sends — they are now **scoped to individual agents**. KPIs are also **bound to a single agent**. Both require `--agent-id` when creating. Legacy CustomDataConfigs with no agent (created before this change) remain accessible to all agents, but new configs must specify an agent. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
+CustomDataConfigs define the schema for fields your SDK sends. They are now **scoped to individual agents**. KPIs are also **bound to a single agent**. Both require `--agent-id` when creating. Legacy CustomDataConfigs with no agent (created before this change) remain accessible to all agents, but new configs must specify an agent. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
 
 ---
 
@@ -323,7 +323,7 @@ CustomDataConfigs define the schema for fields your SDK sends — they are now *
 
 ### KPIs Are Unique Per Agent
 
-> ⚠️ **KPIs are unique per agent.** Each KPI definition belongs to exactly one agent and cannot be shared or reused across agents. If multiple agents need the same KPI, create it separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`. CustomDataConfigs are per agent too (`custom-data create` requires `--agent-id`).
+> ⚠️ **KPIs are unique per agent.** Each KPI definition belongs to exactly one agent and cannot be shared or reused across agents. If multiple agents need the same KPI, create it separately for each with `olakai kpis create ... --agent-id EACH_AGENT_ID`. CustomDataConfigs are per agent too (`custom-data create` requires `--agent-id`).
 
 The `--agent-id` flag on all KPI commands (`kpis list`, `kpis create`, `kpis validate`) is not optional — it reflects the architectural binding of KPIs to individual agents. There is no way to create a "global" KPI that applies to multiple agents.
 
@@ -537,7 +537,7 @@ olakai activity sessions --agent-id ID [--json]
 
 # KPIs
 olakai kpis list --agent-id ID [--json]
-olakai kpis create --name "Name" --agent-id ID --calculator-id formula --formula "X" [--unit "unit"] [--aggregation SUM|AVERAGE]
+olakai kpis create --name "Name" --agent-id ID --calculator-id formula --formula "X" --scope PROMPT_REQUEST [--unit "unit"] [--aggregation SUM|AVERAGE]
 olakai kpis create --name "Name" --agent-id ID --calculator-id classifier --template-id TEMPLATE_ID --scope CHAT
 olakai kpis templates                          # List available classifier templates
 olakai kpis update KPI_ID --formula "X"

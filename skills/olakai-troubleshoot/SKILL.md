@@ -982,7 +982,7 @@ KPIs not appearing on new agent?
 ├── KPIs are agent-specific, NOT shared across agents
 ├── Check KPIs exist for THIS agent → olakai kpis list --agent-id THIS_AGENT_ID
 ├── If empty → Create KPIs for this agent (can't reuse from other agents)
-└── CustomDataConfigs ARE shared → no need to recreate those
+└── CustomDataConfigs are per agent too → create them for this agent first (use different names; names are unique per account)
 
 Classifier KPI showing null or not updating?
 ├── Check KPI scope is CHAT → olakai kpis list --agent-id ID --json
@@ -993,7 +993,7 @@ Classifier KPI showing null or not updating?
 
 ROI shows same $ value for every prompt?
 ├── Check Time Saved slot KPI has classifier → olakai kpis list --agent-id ID --json
-├── No classifier KPI → olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID
+├── No classifier KPI → olakai kpis create --name "Time Saved" --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID
 ├── Agent predates slot provisioning → classifier was never provisioned, add manually (CLI-created agents get it automatically today)
 └── Classifier exists but still flat → Check sessionId grouping, wait for chat decoration
 

@@ -46,7 +46,7 @@ Every agent implementation MUST include:
 
 ### 2. KPIs Are Unique Per Agent
 
-**Each KPI definition belongs to exactly one agent.** KPIs cannot be shared or reused across agents. If multiple agents need the same metric, create the KPI separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`.
+**Each KPI definition belongs to exactly one agent.** KPIs cannot be shared or reused across agents. If multiple agents need the same metric, create the KPI separately for each with `olakai kpis create ... --agent-id EACH_AGENT_ID`.
 
 **Common mistake to prevent:** A user asks "Can I reuse KPIs from Agent A on Agent B?" — the answer is always **no**. Each agent must have its own KPI definitions, even if the formulas are identical.
 
@@ -197,7 +197,7 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 olakai kpis list --agent-id AGENT_ID --json | jq '.[] | select(.calculatorId == "classifier") | {name, scope, templateId}'
 
 # If classifier KPI is missing (common for CLI-created agents), add it:
-# olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id AGENT_ID
+# olakai kpis create --name "Time Saved" --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id AGENT_ID
 
 # Check session decoration status (classifier KPIs run at CHAT scope)
 olakai activity sessions --agent-id AGENT_ID
@@ -243,9 +243,9 @@ olakai activity sessions --agent-id AGENT_ID
 | Symptom | Problem | Fix |
 |---------|---------|-----|
 | kpiData shows `"VariableName"` | Formula stored as string | `olakai kpis update ID --formula "X"` |
-| kpiData shows `null` | Missing CustomDataConfig | `olakai custom-data create --name X --type NUMBER` |
+| kpiData shows `null` | Missing CustomDataConfig | `olakai custom-data create --agent-id ID --name X --type NUMBER` |
 | customData has extra fields | Sending unregistered data | Remove fields without configs |
 | No events appearing | SDK/API key issue | Check init, API key, debug mode |
-| KPIs missing on new agent | Assumed KPIs carry over from another agent | Create new KPIs: `olakai kpis create --agent-id THIS_AGENT_ID` |
-| ROI shows same $ for every prompt | Time Saved slot missing classifier (common for CLI-created agents) | `olakai kpis create --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID` |
+| KPIs missing on new agent | Assumed KPIs carry over from another agent | Create new KPIs: `olakai kpis create --name "My KPI" --calculator-id formula --formula "Variable" --scope PROMPT_REQUEST --agent-id THIS_AGENT_ID` |
+| ROI shows same $ for every prompt | Time Saved slot missing classifier (common for CLI-created agents) | `olakai kpis create --name "Time Saved" --calculator-id classifier --template-id time_saved_estimator --scope CHAT --agent-id ID` |
 | Shadow AI ROI flat across all apps | Per-app `defaultTimeSavedMinutes` not set | Configure per-app overrides in Shadow AI > Manage |

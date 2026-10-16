@@ -97,7 +97,7 @@ olakai agents create --name "Agent Name" --with-api-key --json | jq -r '.apiKey.
 
 # Manage KPIs
 olakai kpis list --agent-id ID
-olakai kpis create --formula "Variable" --scope PROMPT_REQUEST --agent-id ID
+olakai kpis create --name "My KPI" --calculator-id formula --formula "Variable" --scope PROMPT_REQUEST --agent-id ID
 
 # Manage Custom Data
 olakai custom-data list --agent-id ID
