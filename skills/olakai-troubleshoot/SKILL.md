@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.2"
+  version: "1.18.3"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -431,7 +431,7 @@ You created KPIs for one agent and expected them to apply to a different agent. 
 
 | Concept | Scope | Shared Across Agents? |
 |---------|-------|-----------------------|
-| **CustomDataConfig** | Account-level | ✅ Yes — created once, available to all agents |
+| **CustomDataConfig** | Agent-level | ❌ No: `custom-data create` requires `--agent-id`; names are unique per account, so use a different name per agent |
 | **KPI** | Agent-level | ❌ No — belongs to one agent only |
 
 ### Diagnostic
@@ -476,7 +476,7 @@ When creating a new agent, always:
 2. Create KPIs explicitly for the new agent — don't assume they exist from another agent
 3. Verify with `olakai kpis list --agent-id NEW_AGENT_ID`
 
-> **Note:** CustomDataConfigs are agent-scoped too (`custom-data create` requires `--agent-id`), so recreate the fields the second agent sends before its KPIs: `olakai custom-data create --agent-id AGENT_B_ID --name ItemsProcessed --type NUMBER`.
+> **Note:** CustomDataConfigs are agent-scoped too (`custom-data create` requires `--agent-id`), so create the fields the second agent sends before its KPIs. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name. Example: `olakai custom-data create --agent-id AGENT_B_ID --name ItemsProcessed_B --type NUMBER`.
 
 ---
 

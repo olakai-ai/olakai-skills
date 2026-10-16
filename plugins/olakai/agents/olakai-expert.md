@@ -52,7 +52,7 @@ Every agent implementation MUST include:
 
 | Concept | Scope | Shared? |
 |---------|-------|---------|
-| **CustomDataConfig** | Account-level | ✅ Yes — created once, available to all agents |
+| **CustomDataConfig** | Agent-level | ❌ No: `custom-data create` requires `--agent-id`; names are unique per account, so use a different name per agent |
 | **KPI** | Agent-level | ❌ No — belongs to one agent, must be created per agent |
 
 ### 3. Design Before Code

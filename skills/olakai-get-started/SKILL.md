@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.3"
+  version: "1.18.4"
 ---
 
 # Get Started with Olakai
@@ -319,13 +319,18 @@ olakai agents create \
   --json
 ```
 
-**Save the output!** It contains your `apiKey` which you'll need for SDK integration:
+**Save the output!** `apiKey.key` is the key you need for SDK integration. The CLI shows it only once. Add `| jq -r '.apiKey.key'` to print only the key.
 
 ```json
 {
   "id": "cmkbteqn501kyjy4yu6p6xrrx",
   "name": "My First Agent",
-  "apiKey": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57"
+  "apiKey": {
+    "id": "...",
+    "key": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57",
+    "keyMasked": "...",
+    "isActive": true
+  }
 }
 ```
 
@@ -341,12 +346,9 @@ Or add to your project's `.env` file:
 OLAKAI_API_KEY=3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57
 ```
 
-### 4.3 Retrieve API Key Later
+### 4.3 Lost the API Key?
 
-If you need to get the API key again:
-```bash
-olakai agents get AGENT_ID --json | jq '.apiKey'
-```
+The CLI cannot show the full key again. `olakai agents get AGENT_ID --json` returns only `apiKey.keyMasked`. Regenerate the key on the agent page in the Olakai web UI, then update `OLAKAI_API_KEY`.
 
 ---
 
@@ -500,7 +502,7 @@ olakai kpis create \
   --aggregation SUM
 ```
 
-> **Note:** Both KPIs and CustomDataConfigs are created per-agent (`custom-data create` requires `--agent-id`). If you later create additional agents, you'll need to create the custom data configs and the KPIs again for each one — neither can be shared across agents.
+> **Note:** Both KPIs and CustomDataConfigs are created per-agent (`custom-data create` requires `--agent-id`). If you later create additional agents, you'll need to create the custom data configs and the KPIs again for each one — neither can be shared across agents. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
 
 ### Learn More
 

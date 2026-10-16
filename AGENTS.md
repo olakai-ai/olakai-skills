@@ -302,7 +302,7 @@ When implementing agents, coding assistants often:
 | **Creation** | Create for each agent that needs it | Create separately for each agent |
 | **CLI flag** | `--agent-id` required | `--agent-id` required |
 
-CustomDataConfigs define the schema for fields your SDK sends — they are now **scoped to individual agents**. KPIs are also **bound to a single agent**. Both require `--agent-id` when creating. Legacy account-level CustomDataConfigs (created before this change) remain accessible to all agents but new configs must specify an agent.
+CustomDataConfigs define the schema for fields your SDK sends — they are now **scoped to individual agents**. KPIs are also **bound to a single agent**. Both require `--agent-id` when creating. Legacy CustomDataConfigs with no agent (created before this change) remain accessible to all agents, but new configs must specify an agent. Config names are unique per account today, so a second agent needs a different field name (for example `ItemsProcessed_B`), and its KPI formulas must use that name.
 
 ---
 
@@ -323,7 +323,7 @@ CustomDataConfigs define the schema for fields your SDK sends — they are now *
 
 ### KPIs Are Unique Per Agent
 
-> ⚠️ **KPIs are unique per agent.** Each KPI definition belongs to exactly one agent and cannot be shared or reused across agents. If multiple agents need the same KPI, create it separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`. This is unlike CustomDataConfigs, which are account-level and shared.
+> ⚠️ **KPIs are unique per agent.** Each KPI definition belongs to exactly one agent and cannot be shared or reused across agents. If multiple agents need the same KPI, create it separately for each using `olakai kpis create --agent-id EACH_AGENT_ID`. CustomDataConfigs are per agent too (`custom-data create` requires `--agent-id`).
 
 The `--agent-id` flag on all KPI commands (`kpis list`, `kpis create`, `kpis validate`) is not optional — it reflects the architectural binding of KPIs to individual agents. There is no way to create a "global" KPI that applies to multiple agents.
 
@@ -673,8 +673,15 @@ instrument_openai()
 with olakai_context(userEmail=str, task=str, customData=dict):
     response = client.chat.completions.create(...)
 
-# Manual event
-olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime=int, task=str, customData=dict))
+# Context manager has no sessionId parameter. Pass sessionId on manual events instead.
+# Manual event (sessionId groups conversation turns)
+olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime=int, sessionId=str, task=str, customData=dict))
+
+# olakai-sdk>=1.7.0 (not yet released)
+from olakaisdk import olakai_flush
+olakai_event(OlakaiEventParams(prompt=str, response=str, modelName=str))
+olakai_flush(timeout=5.0)  # -> bool; call before a script or serverless handler exits
+# capture_api_keys is deprecated and ignored. Provider keys are never sent.
 ```
 
 ---

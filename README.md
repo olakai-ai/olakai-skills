@@ -93,16 +93,15 @@ olakai activity sessions --agent-id ID  # Session decoration status
 
 # Manage Agents (includes API key generation)
 olakai agents list
-olakai agents create --name "Agent Name" --with-api-key --json
-olakai agents get AGENT_ID --json | jq '.apiKey'
+olakai agents create --name "Agent Name" --with-api-key --json | jq -r '.apiKey.key'  # full key, shown once
 
 # Manage KPIs
 olakai kpis list --agent-id ID
-olakai kpis create --formula "Variable" --agent-id ID
+olakai kpis create --formula "Variable" --scope PROMPT_REQUEST --agent-id ID
 
 # Manage Custom Data
-olakai custom-data list
-olakai custom-data create --name "Field" --type NUMBER
+olakai custom-data list --agent-id ID
+olakai custom-data create --agent-id ID --name "Field" --type NUMBER  # per agent
 ```
 
 ## SDK Quick Start

@@ -19,7 +19,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.2"
+  version: "1.21.3"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -472,7 +472,7 @@ When you select an **existing agent** during `olakai monitor init` and the CLI a
 Use the pasted key anyway? (y/n) [n]:
 ```
 
-The default is **abort** — pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, regenerate a fresh key for the right agent (`olakai agents get AGENT_ID --json | jq '.apiKey'`), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
+The default is **abort** — pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, get a fresh key for the right agent (regenerate it on the agent page in the Olakai web UI; `olakai agents get` shows only a masked key), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
 
 ## Validate via the Golden Rule
 
@@ -650,7 +650,7 @@ olakai kpis create --name "Time Saved" \
 The hook is designed to fail silently — errors in the monitoring hook should never interrupt your local agent session. If you suspect issues:
 
 1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent)
-2. Verify API key is valid: `olakai agents get AGENT_ID --json | jq '.apiKey'`
+2. Verify API key is valid: `olakai monitor doctor --tool <tool>` (the `api-key-valid` check). Add `--fix` to rotate the key and rewrite the config
 3. Test connectivity: `olakai whoami`
 
 ### Two `olakai` on PATH
