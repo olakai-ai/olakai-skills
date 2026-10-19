@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.16.2"
+  version: "1.17.0"
 ---
 
 # Olakai Developer Status Digest
@@ -28,6 +28,24 @@ metadata:
 This skill fetches your Olakai Coding IQ status and formats it as a clean in-terminal digest — monitoring health, personal spend, and budget — without leaving Claude Code.
 
 It can also surface your **Builder Profile** — your AI-collaboration archetype, six dimension scores, and personal ROI — via `olakai profile`. See the [Builder Profile](#builder-profile-olakai-profile) section below.
+
+> ⚠️ **`monitoring.agentCount: 0` can be a false zero on a multi-deployment
+> machine** ([OLA-1610](https://linear.app/olakai/issue/OLA-1610)). The agent
+> lookup resolves against the **active CLI profile's** host, while a workspace
+> records its own `monitoringEndpoint`. A workspace monitored on a different
+> host therefore reports `agentCount: 0` and shows as unmonitored, with no
+> warning that the two disagree.
+>
+> Before telling anyone their workspace is unmonitored, compare the hosts:
+>
+> ```bash
+> olakai monitor list --json | jq -r '.[] | "\(.path)\t\(.monitoringEndpoint)"'
+> olakai profiles list
+> ```
+>
+> If the workspace's host is not the active profile's, re-read with
+> `olakai --profile <name> status --json` and report that. Say "not checked on
+> `<host>`", never "not monitored".
 
 ## Step 1: Check prerequisites
 

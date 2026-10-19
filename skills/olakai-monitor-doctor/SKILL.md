@@ -18,7 +18,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.1"
+  version: "1.22.0"
 ---
 
 # Self-Heal Local Coding Agent Monitoring
@@ -87,8 +87,50 @@ olakai agents mine --source codex --json
 | 2 | `config-valid` | `.olakai/monitor-<tool>.json` exists and parses (key, agentId, endpoint) | Missing/corrupt config → `monitor repair` re-writes it |
 | 3 | `hooks-installed` | The tool's settings file has the Olakai hook entries | Hooks removed or a settings edit clobbered them → `--fix` re-merges them |
 | 4 | `api-key-valid` | The stored key authenticates (`GET /api/monitoring/prompt/me`) | Key revoked/rotated → `--fix` rotates a fresh key on the *same* agent and rewrites the config (cross-wired-key detection is a `monitor init` feature, not `doctor`) |
-| 5 | `agent-exists` | The linked agent still exists on the backend | Agent deleted (404) → recreation is **gated** behind `--recreate-missing` or `repair` (so a transient 404 can't spawn a duplicate) |
-| 6 | `events-flowing` | Recent events exist for this agent (metadata probe) | Hooks installed but never fired → run a turn, then re-check; if still empty see the unattributed-activity caveat below |
+| 5 | `agent-exists` | The linked agent still exists on the backend **on the active profile's host** — not necessarily the workspace's | Agent deleted (404) → **verify the host first (see the warning below); a cross-host 404 is false** — recreation is **gated** behind `--recreate-missing` or `repair` (so a transient 404 can't spawn a duplicate) |
+| 6 | `events-flowing` | Recent events exist for this agent (metadata probe) — resolved on the active profile's host, so it is skipped or empty whenever check 5 failed falsely | Hooks installed but never fired → run a turn, then re-check; if still empty see the unattributed-activity caveat below |
+
+> ⚠️ **A 404 on `agent-exists` is not proof the agent is gone. Check the host
+> first** ([OLA-1610](https://linear.app/olakai/issue/OLA-1610), open against
+> the CLI).
+>
+> `doctor` resolves its two backend checks against **two different hosts**:
+>
+> - `api-key-valid` uses the **workspace's** `monitoringEndpoint` — correct.
+> - `agent-exists` and `events-flowing` use the **active CLI profile's** host.
+>
+> So on a machine with more than one deployment (SaaS, staging, on-prem), every
+> workspace that is not on the active profile reports a passing key check and a
+> **false** `no longer exists on the backend (404)`. The agent is fine; the CLI
+> looked for it on the wrong deployment. `monitor doctor --all` shows the same
+> false 404 for each such workspace, and `olakai status --json` reports
+> `monitoring.agentCount: 0` for the same reason.
+>
+> **This is why it matters here rather than only in the CLI:** a 404 is exactly
+> what gates `monitor repair` and `doctor --fix --recreate-missing`. Acting on a
+> false one **creates a duplicate agent on the wrong deployment and repoints the
+> workspace at it** — splitting the workspace's history across two agents on two
+> hosts, which no later repair undoes.
+>
+> **Before treating any 404 as real, compare the hosts** (both commands work
+> offline, and `monitor list` needs no valid token):
+>
+> ```bash
+> olakai monitor list --json | jq -r '.[] | "\(.path)\t\(.monitoringEndpoint)"'
+> olakai profiles list        # every logged-in host, and which profile is active
+> ```
+>
+> Then:
+>
+> | Comparison | What to do |
+> |---|---|
+> | Active profile's host **==** the workspace's `monitoringEndpoint` host | The 404 is real. Proceed. |
+> | A **different** profile is logged in to that host | Re-run against it: `olakai --profile <name> monitor doctor --tool <tool>`. Report that result, not the first one. |
+> | **No** profile is logged in to that host | Report "cannot check: not logged in to `<host>`". **Do not** run `repair` or `--recreate-missing`. Offer `olakai login` for that host instead. |
+>
+> Never recreate an agent while the profile host and the workspace host differ,
+> even when the user asks for it — say which host the agent is on and which one
+> you are authenticated to.
 
 `--fix` is **idempotent and best-effort**: it adopts the registry entry, re-merges missing hooks, and re-links a rejected key. It will **not** recreate a missing agent unless you add `--recreate-missing` — a deliberate guard against a flaky/transient 404 spawning a duplicate agent.
 
@@ -210,7 +252,7 @@ Ask the user before you run the upgrade on the first line. Run it only after the
 ```bash
 npm install -g olakai-cli@latest                 # 0.x npm installs only; on 1.x run olakai update
 olakai --version                                 # MUST report 0.14.0 or later; see the guard above
-olakai monitor doctor --tool claude-code --fix   # migrates the hooks to .claude/settings.local.json
+olakai monitor doctor --tool claude-code --fix   # attempts to migrate the hooks to .claude/settings.local.json
 ```
 
 **The version check is not optional here.** See [Check your CLI version before migrating](#check-your-cli-version-before-migrating). On 0.13.0 the same `--fix` puts the hooks back into `.claude/settings.json` and reports success, which recreates the exact problem you are fixing.
