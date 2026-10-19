@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.3"
+  version: "1.12.4"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -220,11 +220,20 @@ olakai agents create \
 #   "id": "cmkbteqn501kyjy4yu6p6xrrx",
 #   "name": "Your Agent Name",
 #   "workflowId": "wfl_xxx...",
-#   "apiKey": "3f9a1c84-7b2e-4d15-9a08-c6e5b1d27f40"   <-- a UUID; use it in your SDK
+#   "apiKey": {
+#     "id": "...",
+#     "key": "3f9c1e2a-7b4d-4c8e-9a1f-2d6b8e0c4a57",   <-- a UUID; use this in your SDK
+#     "keyMasked": "...",
+#     "isActive": true
+#   }
 # }
+# Extract the key: add | jq -r '.apiKey.key' to the create command.
 
-# To retrieve an existing agent's API key:
-olakai agents get AGENT_ID --json | jq '.apiKey'
+# The full key is shown only once, in this create output.
+# `olakai agents get AGENT_ID --json` returns only apiKey.keyMasked.
+# Lost the key? Copy it from the agent's card in the web UI:
+# Global Settings > Configuration & Controls > Agents (Generate if it has none).
+# Needs admin access; otherwise ask an admin.
 ```
 
 **Workflow → Agent Hierarchy:**
@@ -332,7 +341,7 @@ olakai kpis list --agent-id YOUR_AGENT_ID
 # Look for slot KPIs: Execution Cost, Time Saved, Value Created, Governance Compliance
 ```
 
-**Agent creation provisions all five metric slots, Time Saved included** — `provisionMetricSlots()` runs for every path (UI, CLI, Kai, SDK), so a CLI-created agent does get the CHAT-scope classifier. Verify rather than assume it is absent: `olakai kpis list --agent-id AGENT_ID --json`. If it genuinely is missing, add it manually:**
+**If the Time Saved classifier is missing, add it manually.** Every creation path (dashboard, CLI `agents create`, `monitor init`, SDK, Kai) auto-provisions it today; it is only absent on agents created before slot provisioning existed:
 ```bash
 olakai kpis create --name "Time Saved" \
   --calculator-id classifier --template-id time_saved_estimator \
@@ -359,8 +368,8 @@ olakai kpis create \
   --name "Items Processed" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
-  --scope PROMPT_REQUEST \
   --formula "ItemsProcessed" \
+  --scope PROMPT_REQUEST \
   --unit "items" \
   --aggregation SUM
 
@@ -369,8 +378,8 @@ olakai kpis create \
   --name "Success Rate" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
-  --scope PROMPT_REQUEST \
   --formula "SuccessRate * 100" \
+  --scope PROMPT_REQUEST \
   --unit "%" \
   --aggregation AVERAGE
 
@@ -379,8 +388,8 @@ olakai kpis create \
   --name "Error Count" \
   --agent-id YOUR_AGENT_ID \
   --calculator-id formula \
-  --scope PROMPT_REQUEST \
   --formula "IF(SuccessRate < 1, 1, 0)" \
+  --scope PROMPT_REQUEST \
   --unit "errors" \
   --aggregation SUM
 
@@ -677,19 +686,21 @@ If fields are missing: SDK isn't sending them. Check your `customData` object in
 olakai activity get EVENT_ID --json | jq '.kpiData'
 ```
 
+`kpiData` is keyed by **KPI definition id** (the `id` from `olakai kpis list --json`), not by KPI name. Map ids to names with `olakai kpis list --agent-id YOUR_AGENT_ID --json | jq '.[] | {id, name}'`.
+
 **CORRECT** - numeric values:
 ```json
 {
-  "Items Processed": 10,
-  "Success Rate": 100
+  "cmkf1a2b3c4d5e6f7g8h9i0k": 10,
+  "cmkf1a2b3c4d5e6f7g8h9i0l": 100
 }
 ```
 
 **WRONG** - string values (indicates broken formula):
 ```json
 {
-  "Items Processed": "itemsProcessed",
-  "Success Rate": "SuccessRate"
+  "cmkf1a2b3c4d5e6f7g8h9i0k": "itemsProcessed",
+  "cmkf1a2b3c4d5e6f7g8h9i0l": "SuccessRate"
 }
 ```
 
@@ -749,11 +760,10 @@ $ olakai activity get cmkeyyy --json | jq '{customData, kpiData}'
     "ItemsProcessed": 5,
     "SuccessRate": 1
   },
-  // keyed by KPI definition id in a real payload; names shown for readability
-  "kpiData": {
-    "Steps Executed": 3,        # ✅ Numeric
-    "Items Processed": 5,       # ✅ Numeric
-    "Success Rate": 100         # ✅ Numeric (formula: SuccessRate * 100)
+  "kpiData": {                  # keyed by KPI definition id, not name
+    "cmkf1a2b3c4d5e6f7g8h9i0j": 3,    # ✅ Numeric ("Steps Executed")
+    "cmkf1a2b3c4d5e6f7g8h9i0k": 5,    # ✅ Numeric ("Items Processed")
+    "cmkf1a2b3c4d5e6f7g8h9i0l": 100   # ✅ Numeric ("Success Rate", formula: SuccessRate * 100)
   }
 }
 
@@ -835,7 +845,7 @@ Use these predefined task categories for the `task` field:
 olakai login                           # Authenticate
 olakai agents create --name "Name"     # Create agent
 olakai custom-data create --agent-id ID --name X --type NUMBER  # Create custom field
-olakai kpis create --name "N" --formula "X" --scope PROMPT_REQUEST --agent-id ID   # Create KPI
+olakai kpis create --name "Name" --calculator-id formula --formula "X" --scope PROMPT_REQUEST --agent-id ID  # Create KPI (--scope is required)
 olakai activity list --agent-id ID     # View events
 
 # SDK Initialization (TypeScript)

@@ -19,7 +19,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.2"
+  version: "1.21.3"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -472,7 +472,7 @@ When you select an **existing agent** during `olakai monitor init` and the CLI a
 Use the pasted key anyway? (y/n) [n]:
 ```
 
-The default is **abort** — pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, regenerate a fresh key for the right agent (`olakai agents get AGENT_ID --json | jq '.apiKey'`), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
+The default is **abort**. Pressing Enter cancels the init and protects you from wiring a key into the wrong agent's config. Pick again, get a fresh key for the right agent (copy it from the agent's card under Global Settings > Configuration & Controls > Agents in the web UI (admin access; otherwise ask an admin); `olakai agents get` shows only a masked key), or type `y` if you intentionally want a cross-wired setup (rare, usually a mistake).
 
 ## Validate via the Golden Rule
 
@@ -517,7 +517,7 @@ Plus the composite: **ROI** = Value Created / Execution Cost.
 olakai kpis list --agent-id AGENT_ID
 ```
 
-Agent creation provisions all five metric slots, Time Saved included, on every path. If it is genuinely missing (verify with `olakai kpis list --agent-id AGENT_ID --json`, do not assume — this used to be stated as expected for CLI-created agents), add it manually:
+If the Time Saved classifier is missing, add it manually. `agents create` and `monitor init` auto-provision it today, so this only applies to agents created before slot provisioning existed:
 
 ```bash
 olakai kpis create --name "Time Saved" \
@@ -581,7 +581,7 @@ These act on the agent record on the Olakai backend, across all machines — not
 olakai agents archive AGENT_ID                # hide an agent you no longer use
 olakai agents archive AGENT_ID --unarchive    # bring it back
 olakai agents rename AGENT_ID "New Name"      # rename
-olakai agents delete AGENT_ID                 # permanent delete
+olakai agents delete AGENT_ID                 # also a soft delete: archives the agent (no CLI command destroys one)
 ```
 
 > **Backend requirement:** `agents archive` / `rename` require a current Olakai backend (self-owner lifecycle support shipped alongside these CLI commands). Against older backends these are admin-only and `archive` may no-op silently — if archive appears to do nothing, your backend predates the feature.
@@ -650,7 +650,7 @@ olakai kpis create --name "Time Saved" \
 The hook is designed to fail silently — errors in the monitoring hook should never interrupt your local agent session. If you suspect issues:
 
 1. Check config exists: `cat .olakai/monitor-claude-code.json` (or the Codex/Cursor equivalent)
-2. Verify API key is valid: `olakai agents get AGENT_ID --json | jq '.apiKey'`
+2. Verify API key is valid: `olakai monitor doctor --tool <tool>` (the `api-key-valid` check). Add `--fix` to rotate the key and rewrite the config. Rotation invalidates the old key, so any other config that uses it stops reporting
 3. Test connectivity: `olakai whoami`
 
 ### Two `olakai` on PATH

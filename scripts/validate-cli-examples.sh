@@ -49,7 +49,12 @@ for file in "${FILES[@]}"; do
     for my $line (split /\n/) {
       $ln++;
       next unless $line =~ /olakai kpis create/;
-      my $n = () = $line =~ /--scope/g;
+      # Count flags, not prose: a trailing `# ... (--scope is required)`
+      # comment is not a second --scope, and must not stand in for a
+      # missing one either. Only a comment after whitespace is stripped, so
+      # a "#" inside a quoted argument with no space before it survives.
+      (my $cmd = $line) =~ s/\s+#\s.*$//;
+      my $n = () = $cmd =~ /--scope/g;
       print "MISSING\t$ln\t$line\n"   if $n == 0;
       print "DUPLICATE\t$ln\t$line\n" if $n > 1;
     }

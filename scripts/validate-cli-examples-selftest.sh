@@ -13,7 +13,7 @@ cd "$(git rev-parse --show-toplevel)"
 
 GATE=./scripts/validate-cli-examples.sh
 FIXTURE=scripts/__fixtures__/kpis-create-no-scope.md
-EXPECTED_MISSING=2
+EXPECTED_MISSING=3
 EXPECTED_DUPLICATE=1
 log=$(mktemp); trap 'rm -f "$log"' EXIT
 
@@ -47,7 +47,7 @@ echo "  OK: rejected $miss missing and $dup duplicate, across single- and multi-
 # And it must not fire on the two correct examples in the same file — if it did,
 # the count above would be 4, so this is already proved. State it explicitly so
 # a future edit to the fixture cannot quietly drop the positive cases.
-if [ "$(grep -cE '^ +(MISSING|DUPLICATE) \(near' "$log")" -ne 3 ]; then
+if [ "$(grep -cE '^ +(MISSING|DUPLICATE) \(near' "$log")" -ne 4 ]; then
   echo "FAIL: the gate flagged one of the two CORRECT examples."
   sed 's/^/      /' "$log"; exit 1
 fi

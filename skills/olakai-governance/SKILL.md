@@ -1,29 +1,30 @@
 ---
 name: olakai-governance
 description: >
-  Read and interpret Olakai AI governance data over MCP — compliance posture,
+  Read and interpret Olakai governance data over MCP — compliance posture,
   PII/PHI/CODE/SECRET exposure, policy and detector flags, framework gaps and
-  flag triage — without misreporting the numbers.
+  flag triage.
 
   AUTO-INVOKE when the user asks to analyze my governance risks, are we exposed
-  on PII, PHI, code or secrets, or for any reading of Olakai risk, compliance,
+  on PII, PHI, code or secrets, or any reading of Olakai risk, compliance,
   flagged interactions, policy violations or audit readiness.
 
   TRIGGER KEYWORDS: olakai, governance, exposed, dangerousity, flagged, shadow
-  AI, department risk, audit, auditor.
+  AI, audit.
 
-  CRITICAL: Olakai governance is POST-HOC DETECTION over METADATA ONLY. It
-  never blocks a prompt and returns no prompt text. Dangerousity (0-1) and PII+
-  sensitivity are separate scales, never averaged. Most numbers have a
-  denominator smaller than the window — load this skill before answering or the
-  answer will be confidently wrong.
+  CRITICAL: governance is POST-HOC DETECTION and never blocks a prompt. No tool
+  returns prompt text except the ADMIN triage review, whose `explanation` may
+  quote the interaction. Dangerousity (0-1) and PII+ sensitivity are separate
+  scales, never averaged. Lead with coverage, not verdicts: most numbers have a
+  denominator smaller than the window, so load this skill before answering or
+  be confidently wrong.
 
   DO NOT load for: SDK setup (olakai-integrate), CLI KPI reports
-  (olakai-reports), or debugging missing events (olakai-troubleshoot).
+  (olakai-reports), or missing events (olakai-troubleshoot).
 license: MIT
 metadata:
   author: olakai
-  version: "1.1.2"
+  version: "1.2.0"
 ---
 
 # Olakai AI Governance (over MCP)
@@ -37,10 +38,14 @@ so: nothing here works without one.
 Three facts constrain every answer. They are not caveats; they are the shape of
 the data.
 
-1. **Metadata only.** No prompt or response text is returned to you by any tool
-   here. You cannot read what a person typed. Never imply you did. The one
-   exception reads content *server-side* and hands back a content-free summary
-   (see Triage).
+1. **Metadata only, with ONE exception.** No read tool returns prompt or
+   response text. You cannot read what a person typed. Never imply you did.
+   The exception is `review_governance_flags` (ADMIN, see Triage): it reads
+   content *server-side* and returns two fields that are NOT alike — a
+   `rationale` that is content-free and safe to persist, and an `explanation`
+   that MAY quote the interaction. Show the `explanation` to the admin, who can
+   already open these interactions; never save it, and never treat it as
+   evidence you read the prompt yourself.
 2. **Post-hoc detection, never prevention.** Nothing in Olakai blocks a prompt.
    Governance Policies and built-in detectors score interactions *after* they
    happen. The only thing that stops a prompt is the customer's own application
@@ -448,11 +453,21 @@ positives and surface genuine violations.
    when they are exhausted. Work a batch the admin can actually review with you;
    if the queue is large, take the highest-signal interactions first and say the
    rest are still pending.
-   The result carries `summary.skippedCount` and a `skipped[]` list with a
-   reason per interaction — content access can be refused for a given reviewer,
-   for instance. **Report the skips.** A review of 18 of 25 presented as a
+   **Lead with coverage, before any verdict total.** The content read is
+   refusable PER INTERACTION — on an account with Enhanced Privacy Mode on, the
+   gate wants a per-user prompt-view authorization for the login you are acting
+   through, so a batch of 25 can come back with 3 reviewed. The result carries a
+   `coverage` block for exactly this: give the admin `coverage.note` first, then
+   the verdicts. `coverage.partial` is true whenever the two numbers differ,
+   `coverage.skipReasons` says which causes applied (`not_authorized` is the
+   privacy one), and `skippedByUser` names whose authorization would widen it —
+   offer that as the next step. `skipped[]` keeps a reason per interaction.
+
+   Give **two** figures, not one: reviewed of requested, and requested of the
+   queue you built in step 1 — within the window and suite you queried, since no
+   governance figure here is account-wide. A review of 18 of 25 presented as a
    review of 25 is the quiet version of the coverage mistake this whole skill
-   exists to prevent.
+   exists to prevent, and 3 confirmed out of 3 readable is not "mostly clean".
 3. **Explain before you propose.** Present each interaction with its verdict,
    confidence and the concrete `explanation` — *why* it is or is not a genuine
    violation. That is the point of the review; counts alone are not. Lead with
@@ -561,7 +576,7 @@ content.>
 | "Violations rose 30%" (from `get_violation_trends`) | That counts reminders sent. (14) |
 | "Engineering is riskiest" (raw counts) | Rank by rate over each team's own volume, with n. (5, 13) |
 | "412 flagged interactions" (summed across categories) | Those are finding rows; one interaction fans out. Use `COUNT_DISTINCT`. (13) |
-| "The user asked the model to bypass an export control" | You have criteria and a content-free explanation, not the prompt. (metadata only) |
+| "The user asked the model to bypass an export control" | Outside triage you have criteria, not the prompt. The triage `explanation` may quote one — attribute it to the review, and never paraphrase it as something you read. (metadata only) |
 | "Detection went quiet — something broke" | Check `get_usage_status.isDegraded` first. (15) |
 | "We're 71% EU AI Act compliant" | That is configuration presence, not an audit result. |
 | "Policy COMP caught 43 interactions" | No per-policy hit count exists. Offer the sampled read with its disclosure. (J8) |
@@ -654,7 +669,8 @@ are provisioned one per developer per tool and otherwise take every top slot.
 
 ## Not available on this connection
 
-- **Prompt and response text.** Metadata only.
+- **Prompt and response text.** Metadata only — except the triage review's
+  `explanation`, the one field that may quote an interaction.
 - **Creating, editing or publishing a Governance Policy or an Acceptable Use
   Policy.** Draft the wording; the change is made in Olakai.
 - **The Compliance Report artifact.** ADMIN-only, generated in-product.

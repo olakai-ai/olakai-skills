@@ -17,7 +17,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.1"
+  version: "1.12.2"
 ---
 
 # Olakai Implementation Planning Guide
@@ -107,13 +107,13 @@ olakai activity get EVENT_ID --json | jq '{customData, kpiData}'
 | Add monitoring to existing code | `/olakai-integrate` | Wrap existing LLM calls, add customData, minimal changes |
 | Something not working | `/olakai-troubleshoot` | Diagnose missing events, wrong KPIs, SDK errors |
 | Generate usage reports | `/olakai-reports` | Terminal-based analytics without web UI |
+| Monitor Claude Code / Codex / Cursor / Gemini CLI / Antigravity on this machine | `/olakai-monitor-local-coding-agent` | `olakai monitor init`, hooks, routing per tool |
+| Monitoring stopped or looks wrong | `/olakai-monitor-doctor` | `monitor list` / `doctor --fix` / `repair` |
+| Personal Coding IQ status in the terminal | `/olakai-status` | `/olakai` digest of your own coding activity |
+| Tune local agent config from the fluency report | `/olakai-tune-my-setup` | Diff report vs config, propose edits |
+| Read or interpret governance data | `/olakai-governance` | Governance over the MCP connector |
+| AI spend, budgets, cost attribution | `/olakai-finops` | FinOps over the MCP connector |
 | Create implementation plan | `/olakai-planning` | This skill - structure plans for context clearing |
-| Monitor the coding tool itself | `/olakai-monitor-local-coding-agent` | Hooks for Claude Code, Codex CLI, Cursor, Gemini CLI, Antigravity CLI |
-| Coding-tool monitoring is broken | `/olakai-monitor-doctor` | `monitor list` / `doctor --fix` / `repair`, drift and agent-lifecycle diagnosis |
-| Personal spend / budget / monitoring health | `/olakai-status` | In-terminal Coding IQ digest |
-| Change the agent's own config from measured fluency | `/olakai-tune-my-setup` | Diffs the AI Fluency report against the real local setup |
-| Read risk / compliance / exposure data | `/olakai-governance` | **Over MCP, not the CLI** — posture, PII+, flags, framework gaps |
-| Read cost / spend / ROI data | `/olakai-finops` | **Over MCP, not the CLI** — spend posture, budgets, forecasts, AI ROI |
 
 **Every step involving Olakai work MUST specify which skill to invoke.**
 
@@ -155,7 +155,7 @@ Key rules:
 4. Field names in SDK must EXACTLY match CustomDataConfig names
 5. KPIs are UNIQUE PER AGENT — each KPI belongs to one agent only
 6. If multiple agents need the same KPI, create it separately for each
-7. CustomDataConfigs are account-level (shared), but KPIs are agent-level (NOT shared)
+7. CustomDataConfigs and KPIs are both per agent (`--agent-id` required). Config names are unique per account, so a second agent needs different field names
 
 What NOT to send in customData (already tracked):
 - sessionId, agentId (automatic)
@@ -258,7 +258,7 @@ olakai activity sessions --agent-id ID [--json]  # Session decoration diagnostic
 
 # KPIs (agent-specific: each KPI belongs to ONE agent, cannot be shared)
 olakai kpis list --agent-id ID [--json]
-olakai kpis create --name "Name" --formula "X" --scope PROMPT_REQUEST --agent-id ID
+olakai kpis create --name "Name" --calculator-id formula --formula "X" --scope PROMPT_REQUEST --agent-id ID  # --scope is required
 olakai kpis validate --formula "X" --agent-id ID
 olakai kpis update KPI_ID --formula "X"
 
@@ -338,13 +338,13 @@ Create KPI formulas using CustomDataConfig field names as variables. Variable na
 AGENT_ID=$(olakai agents list --json | jq -r '.[0].id')
 
 # Create KPIs
-olakai kpis create --name "Avg Resolution Time" --formula "resolutionTime" \
-  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
-olakai kpis create --name "CSAT Score" --formula "customerSatisfaction" \
-  --scope PROMPT_REQUEST --aggregation AVERAGE --agent-id $AGENT_ID
+# --scope is required. Formula KPIs over customData run at PROMPT_REQUEST scope.
+# The aggregate function is AVERAGE; there is no AVG.
+olakai kpis create --name "Avg Resolution Time" --calculator-id formula --formula "AVERAGE(resolutionTime)" --scope PROMPT_REQUEST --agent-id $AGENT_ID
+olakai kpis create --name "CSAT Score" --calculator-id formula --formula "AVERAGE(customerSatisfaction)" --scope PROMPT_REQUEST --agent-id $AGENT_ID
 
 # Verify formulas are valid
-olakai kpis validate --formula "resolutionTime" --agent-id $AGENT_ID
+olakai kpis validate --formula "AVERAGE(resolutionTime)" --agent-id $AGENT_ID
 ```
 
 ### Validation:
@@ -423,13 +423,14 @@ olakai activity get $EVENT_ID --json | jq '{customData, kpiData}'
     "resolutionTime": 45,
     "customerSatisfaction": 4
   },
-  // keyed by KPI definition id in a real payload; names shown for readability
   "kpiData": {
-    "Avg Resolution Time": 45,
-    "CSAT Score": 4
+    "cmkf1a2b3c4d5e6f7g8h9i0n": 45,
+    "cmkf1a2b3c4d5e6f7g8h9i0o": 4
   }
 }
 ```
+
+`kpiData` is keyed by KPI definition id (from `olakai kpis list --json`), not by KPI name.
 
 ### Red flags - invoke `/olakai-troubleshoot` if you see:
 | Symptom | Problem |
