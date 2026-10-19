@@ -757,7 +757,7 @@ Execution Cost in Olakai is much higher than what OpenRouter (or another provide
 
 ### Fix
 1. **Upgrade the SDK.** `@olakai/sdk>=2.7.0` or `olakai-sdk>=1.8.0`. These send the provider-reported cost as `providerCostUsd`. Older SDKs fall back to model-based pricing.
-2. **Check that `providerCostUsd` is present.** The SDKs read it from `usage.cost` on OpenAI-client responses (OpenRouter fills it). Streamed calls send no cost yet. Pass `providerCostUsd` on a manual event instead.
+2. **Check that the cost reached Olakai.** The SDKs read it from `usage.cost` on OpenAI-client responses (OpenRouter fills it). Streamed calls send no cost yet. Pass `providerCostUsd` on a manual event instead. The stored value is not shown in `olakai activity get`. Compare Execution Cost instead: `olakai activity get EVENT_ID --json | jq '.kpiData'`. With a reported cost, Execution Cost equals the provider charge plus the server cost per request.
 3. **Expect the server cost.** Execution Cost = reported cost + `serverCostPerRequest` (default \$0.10 per request). This is added on purpose. If you do not want it, set it to 0 in the Assumptions panel.
 
 ---
