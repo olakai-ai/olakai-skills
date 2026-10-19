@@ -46,7 +46,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.21.1)
+│       │   └── plugin.json       # Plugin metadata (version 1.21.2)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -677,7 +677,7 @@ with olakai_context(userEmail=str, task=str, customData=dict):
 # Manual event (sessionId groups conversation turns)
 olakai_event(OlakaiEventParams(prompt=str, response=str, tokens=int, requestTime=int, sessionId=str, task=str, customData=dict))
 
-# olakai-sdk>=1.7.0 (not yet released)
+# olakai-sdk>=1.7.0
 from olakaisdk import olakai_flush
 olakai_event(OlakaiEventParams(prompt=str, response=str, modelName=str))
 olakai_flush(timeout=5.0)  # -> bool; call before a script or serverless handler exits
@@ -767,8 +767,8 @@ The authoritative source for current published SDK/CLI versions is:
 `localnode-app/packages/config/sdk-versions.ts`
 
 **Current versions** (last updated October 2026):
-- TypeScript SDK: `@olakai/sdk` v2.3.0
-- Python SDK: `olakai-sdk` v1.3.0 (PyPI)
+- TypeScript SDK: `@olakai/sdk` v2.7.0
+- Python SDK: `olakai-sdk` v1.8.0 (PyPI)
 - CLI: `olakai-cli` 0.15.1 (npm, stable). Install: `npm install -g olakai-cli`. Needs Node.js 20+.
 - CLI: 1.0.0-beta.4 (standalone, beta; get.olakai.ai, Homebrew, Scoop, or npm `olakai-cli@next`). A single native binary, no Node.js required. It has every command and flag of the npm CLI and the same config files. A compatibility suite of 142 recorded cases from the TypeScript CLI runs in CI against the beta binary, and all pass. It adds `monitor install-hooks` and `olakai update`, and its `admin monitor bulk-provision` writes home-folder key files instead of the npm per-repo bundle. On 1.x never run `npm install -g olakai-cli@latest` (downgrades to 0.15.1); use `olakai update`. Install and update steps live in `olakai-get-started` only. Always call it beta.
 

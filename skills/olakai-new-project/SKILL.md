@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.12.4"
+  version: "1.12.5"
 ---
 
 # Build a New AI Agent Project with Olakai
@@ -318,6 +318,8 @@ Templates are a great starting point. You can always add custom formula-based KP
 #### Execution Cost (Model-Based Pricing)
 
 > **Execution Cost is now automatically calculated using model-based pricing.** The SDK sends `modelName` as a top-level field (auto-extracted from LLM responses), and the platform resolves the cost per token based on the model used (e.g., GPT-4o, Claude Sonnet). If the model is not recognized, a fallback rate of \$5/1M tokens is applied. You do not need to manually configure cost-per-token for recognized models.
+
+> **Provider-reported cost** (`@olakai/sdk>=2.7.0`, `olakai-sdk>=1.8.0`): when SDK traffic carries `providerCostUsd` (USD, 0 to 10000), Olakai uses it instead of model-based pricing. OpenRouter users get it automatically: both SDKs read `usage.cost` from OpenAI-client responses. Streamed calls send no cost yet. For manual events, pass it yourself: TypeScript `olakai.event({ ..., providerCostUsd: 0.018 })`, Python `OlakaiEventParams(..., providerCostUsd=0.018)`.
 
 #### Auto-Provisioned Metric Slot KPIs
 

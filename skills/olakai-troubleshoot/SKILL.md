@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.3"
+  version: "1.18.4"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -747,6 +747,18 @@ Check if any per-app overrides are set in the admin UI:
 4. Repeat for each application
 
 Per-app overrides always take precedence over the global default. Different apps may warrant different default time saved values (e.g., ChatGPT for quick questions: 10 min, Claude for deep analysis: 45 min).
+
+---
+
+## Issue: Execution Cost Far Above the Real Provider Bill
+
+### Symptom
+Execution Cost in Olakai is much higher than what OpenRouter (or another provider) charged.
+
+### Fix
+1. **Upgrade the SDK.** `@olakai/sdk>=2.7.0` or `olakai-sdk>=1.8.0`. These send the provider-reported cost as `providerCostUsd`. Older SDKs fall back to model-based pricing.
+2. **Check that `providerCostUsd` is present.** The SDKs read it from `usage.cost` on OpenAI-client responses (OpenRouter fills it). Streamed calls send no cost yet. Pass `providerCostUsd` on a manual event instead.
+3. **Expect the server cost.** Execution Cost = reported cost + `serverCostPerRequest` (default \$0.10 per request). This is added on purpose. If you do not want it, set it to 0 in the Assumptions panel.
 
 ---
 
