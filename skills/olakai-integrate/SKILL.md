@@ -20,7 +20,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.4"
+  version: "1.18.5"
 ---
 
 # Integrate Olakai into Existing AI Code
@@ -111,6 +111,20 @@ const openai = olakai.wrap(
 
 **That's it!** All calls through `openai` are now automatically tracked. The SDK automatically captures the model name, token usage, and calculates execution cost using model-based pricing.
 
+**Provider-reported cost** (`@olakai/sdk>=2.7.0`, `olakai-sdk>=1.8.0`):
+
+- **OpenRouter users: cost is captured automatically.** Both SDKs read `usage.cost` from OpenAI-client responses. OpenRouter returns the real charge there. The TypeScript SDK labels OpenAI clients pointed at `openrouter.ai` as provider `"openrouter"`.
+- **Streamed calls send no cost yet.** Pass it manually on a manual event.
+- **Manual events can pass `providerCostUsd`** (number, USD, 0 to 10000). Olakai then uses it for Execution Cost and analytics estimated cost instead of model-based pricing. Only SDK traffic can set it.
+
+```typescript
+olakai.event({ prompt, response, providerCostUsd: 0.018 });
+```
+
+```python
+olakai_event(OlakaiEventParams(prompt=prompt, response=response, providerCostUsd=0.018))
+```
+
 ### For Python
 
 **1. Install the SDK:**
@@ -139,7 +153,7 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 **That's it!** All calls through `client` are now automatically tracked.
 
-**Python SDK 1.7.0 additions** (need `olakai-sdk>=1.7.0`, not yet released):
+**Python SDK 1.7.0 additions** (need `olakai-sdk>=1.7.0`; current release is 1.8.0):
 
 - **Sync clients work.** In 1.6 and earlier, the SDK drops events sent from sync code that has no running asyncio event loop. 1.7.0 sends events from a background thread, so sync `OpenAI()` calls and `olakai_event()` from plain scripts are reported.
 - **`olakai_flush(timeout=5.0) -> bool`.** Call it before a script or serverless handler exits. It waits until queued events are sent or the timeout passes. It returns `True` when the queue is empty. The SDK also calls it at normal interpreter exit.
@@ -317,7 +331,7 @@ olakai_event(OlakaiEventParams(
 > ⚠️ **Only send data you'll use in KPIs or for filtering.** Don't duplicate fields already tracked by the platform:
 > - Session ID, Agent ID (automatic)
 > - User email (use `userEmail` parameter)
-> - Timestamps, token count, model name, execution cost, provider (automatic)
+> - Timestamps, token count, model name, execution cost, provider (automatic; pass `providerCostUsd` only when you know the real charge)
 
 TypeScript:
 ```typescript
