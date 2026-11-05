@@ -221,9 +221,10 @@ Running sessions pick up the hooks after a restart. A ChatGPT Agent Security clo
 
 - **Claude Code:** writes the `Stop` and `SubagentStop` hooks to managed settings: `C:\Program Files\ClaudeCode\managed-settings.json`, `/Library/Application Support/ClaudeCode/managed-settings.json` or `/etc/claude-code/managed-settings.json`. It stops if `HKLM\SOFTWARE\Policies\ClaudeCode` sets a policy, because that outranks the file. Add the hooks there, then run `--tool codex`.
 - **Codex:** writes the `Stop` hook to `%ProgramData%\OpenAI\Codex\hooks.json` or `/etc/codex/hooks.json`. Codex treats it as managed, so no user sees "Hooks need review". It adds no second hook when `requirements.toml` holds one.
-- **Old hooks:** lists Olakai entries in each profile's `.codex/config.toml` and `.codex/hooks.json`, and exits 1 when it finds any. An unapproved one keeps the prompt; an approved one sends each event twice. It does not rewrite user files: each listed user runs `olakai monitor uninstall-hooks --tool codex`.
+- **Old hooks:** lists Olakai entries in each profile's `.codex/config.toml` and `.codex/hooks.json`, and exits 2 when it finds any. An unapproved one keeps the prompt; an approved one sends each event twice. It does not rewrite user files: each listed user runs `olakai monitor uninstall-hooks --tool codex`.
 - **Folder checks:** stops if a non-admin owns the Codex folder, its parent or a file in it. On Windows it limits the Codex folder to administrators, because Codex trusts every file there.
-- **Safe:** offline, idempotent, keeps other settings. An unparseable file is left untouched and the command exits 1.
+- **Safe:** offline, idempotent, keeps other settings. An unparseable machine file is left untouched and the command exits 1.
+- **Exit codes:** 0 done; 2 installed, and a listed user must act or a file could not be checked; 1 a tool was not installed or the run was refused. The outcome can be partial: Claude Code written, Codex refused.
 
 `olakai monitor uninstall-machine-hooks` removes the machine hooks and keeps key files.
 
