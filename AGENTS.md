@@ -576,7 +576,8 @@ olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-c
 olakai monitor install-machine-hooks [--tool claude-code,codex]
                                                          # >= 1.0.1. DEFAULT fleet path. Once per device AS SYSTEM/ADMIN/ROOT.
                                                          #   Claude Code managed settings + Codex system hooks.json (Codex
-                                                         #   >= 0.140.0): no approval prompt. Removes old user-level Codex hooks.
+                                                         #   >= 0.140.0): no approval prompt. Lists old user-level Codex hooks, exit 1;
+                                                         #   each listed user runs uninstall-hooks --tool codex.
 olakai monitor uninstall-machine-hooks [--tool claude-code,codex]
 olakai monitor install-hooks [--tool claude-code,codex,cursor]
                                                          # Standalone >= 1.0.0-beta.4. Run ON THE DEVICE AS THE DEVELOPER
