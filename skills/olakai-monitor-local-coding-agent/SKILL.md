@@ -176,7 +176,9 @@ You can install monitoring for **multiple tools** in the same workspace — each
 
 `olakai monitor init` is the right path for a **single developer** setting up their own machine interactively. If you are an Olakai **ADMIN** rolling out monitoring to a whole team, with no action from each developer, use bulk-provision instead. You push the key files with Intune, Jamf, Group Policy, or another device-management (MDM) tool.
 
-> **Version requirement.** The fleet flow below (Claude Code, Codex and Cursor, home layout, `install-hooks`, home key-file lookup) needs the **standalone CLI 1.0.0-beta.4 or later** (beta) on the admin machine **and** on every developer machine. No stable npm release supports it: npm `olakai-cli` stays at 0.15.1. npm also publishes the beta as `olakai-cli@next`. Install the beta only through `/olakai-get-started`, which asks the user to confirm the beta first. Always check `olakai --version` and read the number. An npm `olakai` must not come first on the `PATH`.
+> **Machine-wide hooks** (`install-machine-hooks`, the default fleet path) need **CLI 1.0.1 or later** and Codex 0.140.0 or later.
+>
+> **Version requirement.** The rest of the fleet flow below (Claude Code, Codex and Cursor, home layout, `install-hooks`, home key-file lookup) needs the **standalone CLI 1.0.0-beta.4 or later** (beta) on the admin machine **and** on every developer machine. No stable npm release supports it: npm `olakai-cli` stays at 0.15.1. npm also publishes the beta as `olakai-cli@next`. Install the beta only through `/olakai-get-started`, which asks the user to confirm the beta first. Always check `olakai --version` and read the number. An npm `olakai` must not come first on the `PATH`.
 
 ```bash
 olakai admin monitor bulk-provision \
@@ -206,18 +208,31 @@ Under the hood it calls the ADMIN-gated `POST /api/config/agents/bulk-provision`
 
 **Push to each device (MDM recipe):**
 
-1. **Install the CLI** (1.0.0-beta.4 or later) in a machine-wide `PATH` location, for example `/usr/local/bin` or `C:\Program Files\Olakai`. The hooks run `olakai monitor hook ...`. Codex hooks need Codex 0.124.0 or later.
+1. **Install the CLI** (1.0.1 or later) in a machine-wide `PATH` location, for example `/usr/local/bin` or `C:\Program Files\Olakai`. The hooks run `olakai monitor hook ...`, so the CLI must be on the machine `PATH`.
 2. **Copy the key files, owned by the developer.** Copy the developer's `.olakai` folder to `C:\Users\<user>\.olakai\`, `/Users/<user>/.olakai/` or `/home/<user>/.olakai/`. Do not use `~` in a root script: it expands to root's home. On macOS and Linux, `chown -R <user>` the folder, `chmod 700` the folder and `chmod 600` the files. Windows needs no owner fix: the user profile ACL is enough.
-3. **Run `olakai monitor install-hooks` as the logged-on developer**, never as root or SYSTEM. Intune: set "Run this script using the logged-on credentials" to Yes. macOS/Linux from a root script: `sudo -H -u <user> olakai monitor install-hooks`. See [What `install-hooks` does](#what-install-hooks-does).
+3. **Run `olakai monitor install-machine-hooks` once per device, as SYSTEM, an elevated administrator or root.** No developer action and no approval prompt. See [What `install-machine-hooks` does](#what-install-machine-hooks-does). Cursor has no machine command: run `olakai monitor install-hooks --tool cursor` as the logged-on developer (Intune: "Run this script using the logged-on credentials" = Yes; macOS/Linux from a root script: `sudo -H -u <user>`).
 4. **Proxy exception.** Behind a TLS-inspecting proxy, add the Olakai instance host to `NO_PROXY` as a machine environment variable. The tools see a new machine variable only after a restart or a new sign-in.
 
-MDM scripts do not load the developer's shell profile. If `CLAUDE_CONFIG_DIR` or `CODEX_HOME` is set only in `.zshrc`, `.bashrc` or a PowerShell profile, set it in the script too.
+Running sessions pick up the hooks after a restart. A ChatGPT Agent Security cloud policy for Codex ranks above local files, and the CLI cannot see it.
 
-**Claude Code alternative: managed settings.** For Claude Code only, you can push the `Stop` and `SubagentStop` hooks (`olakai monitor hook stop`, `olakai monitor hook subagent-stop`) through Claude Code managed settings instead of step 3: `C:\Program Files\ClaudeCode\managed-settings.json` or the registry key `HKLM\SOFTWARE\Policies\ClaudeCode` (`REG_SZ` value `Settings`) on Windows, `/Library/Application Support/ClaudeCode/managed-settings.json` on macOS, `/etc/claude-code/managed-settings.json` on Linux. Steps 1, 2 and 4 still apply. Pick one Claude Code hook method per machine. Then run `install-hooks` for the other tools only: `olakai monitor install-hooks --tool codex,cursor`.
+### What `install-machine-hooks` does
+
+`olakai monitor install-machine-hooks [--tool claude-code,codex]` runs on the device as an administrator:
+
+- **Claude Code:** writes the `Stop` and `SubagentStop` hooks to managed settings: `C:\Program Files\ClaudeCode\managed-settings.json`, `/Library/Application Support/ClaudeCode/managed-settings.json` or `/etc/claude-code/managed-settings.json`. It stops if `HKLM\SOFTWARE\Policies\ClaudeCode` sets a policy, because that outranks the file. Add the hooks there, then run `--tool codex`.
+- **Codex:** writes the `Stop` hook to `%ProgramData%\OpenAI\Codex\hooks.json` or `/etc/codex/hooks.json`. Codex treats it as managed, so no user sees "Hooks need review". It adds no second hook when `requirements.toml` holds one.
+- **Old hooks:** lists Olakai entries in each profile's `.codex/config.toml` and `.codex/hooks.json`, and exits 2 when it finds any. An unapproved one keeps the prompt; an approved one sends each event twice. It does not rewrite user files: each listed user runs `olakai monitor uninstall-hooks --tool codex`.
+- **Folder checks:** stops if a non-admin owns the Codex folder, its parent or a file in it. On Windows it limits the Codex folder to administrators, because Codex trusts every file there.
+- **Safe:** offline, idempotent, keeps other settings. An unparseable machine file is left untouched and the command exits 1.
+- **Exit codes:** 0 done; 2 installed, and a listed user must act or a file could not be checked; 1 a tool was not installed or the run was refused. The outcome can be partial: Claude Code written, Codex refused.
+
+`olakai monitor uninstall-machine-hooks` removes the machine hooks and keeps key files.
+
+**Do not use `install-hooks` for a Codex fleet.** Codex skips a user-level hook until that user approves it at the "Hooks need review" prompt or in `/hooks`, and sends nothing until then. `olakai monitor doctor --tool codex` warns when no approval is recorded.
 
 ### What `install-hooks` does
 
-`olakai monitor install-hooks [--tool claude-code,codex,cursor]` runs on the device, as the developer:
+`olakai monitor install-hooks [--tool claude-code,codex,cursor]` is the user-level path. It runs on the device, as the developer. Each user must approve a Codex hook written this way. MDM scripts do not load the developer's shell profile, so set `CLAUDE_CONFIG_DIR` or `CODEX_HOME` in the script if you use them.
 
 - **Offline and safe to repeat.** No login, no network, no update check. A second run changes nothing.
 - **Default tools:** every tool that has a `~/.olakai/monitor-<tool>.json`. Use `--tool` to choose.
@@ -692,7 +707,9 @@ olakai monitor init --tool antigravity           # Antigravity CLI (recent agy w
 
 # Admin: zero-touch fleet rollout (ADMIN role, standalone CLI >= 1.0.0-beta.4)
 olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-code,codex,cursor] [--rotate-existing-keys] [--name-prefix <p>] [--json] [--yes]
-olakai monitor install-hooks [--tool claude-code,codex,cursor]   # on each device, as the developer; offline, idempotent
+olakai monitor install-machine-hooks [--tool claude-code,codex]  # >= 1.0.1, once per device as admin; no approval prompt
+olakai monitor uninstall-machine-hooks [--tool claude-code,codex]
+olakai monitor install-hooks [--tool claude-code,codex,cursor]   # as the developer; Cursor fleet path; Codex users must approve
 # npm 0.13-0.15.1: bulk-provision supports --tool claude-code only (per-repo bundle), no install-hooks
 
 # See what's monitored (two lenses)
