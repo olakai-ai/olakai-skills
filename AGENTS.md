@@ -573,6 +573,11 @@ olakai admin monitor bulk-provision --emails <file> --out <dir> [--tool claude-c
                                                          #   (.claude/settings.local.json since 0.14.0, .claude/settings.json in
                                                          #   0.13.0, + .olakai/monitor-claude-code.json). Registry entry appears
                                                          #   only after any olakai monitor command runs once on the machine.
+olakai monitor install-machine-hooks [--tool claude-code,codex]
+                                                         # >= 1.0.1. DEFAULT fleet path. Once per device AS SYSTEM/ADMIN/ROOT.
+                                                         #   Claude Code managed settings + Codex system hooks.json (Codex
+                                                         #   >= 0.140.0): no approval prompt. Removes old user-level Codex hooks.
+olakai monitor uninstall-machine-hooks [--tool claude-code,codex]
 olakai monitor install-hooks [--tool claude-code,codex,cursor]
                                                          # Standalone >= 1.0.0-beta.4. Run ON THE DEVICE AS THE DEVELOPER
                                                          #   (never root/SYSTEM). Offline, no login, idempotent. Merges hooks
@@ -581,7 +586,8 @@ olakai monitor install-hooks [--tool claude-code,codex,cursor]
                                                          #   ~/.olakai/monitor-<tool>.json. Unparseable file: left untouched,
                                                          #   others installed, exit 1. Refuses a Codex config.toml whose existing
                                                          #   [hooks] table has comments, and a home or ~/.olakai owned by another
-                                                         #   user or a Windows SYSTEM profile. Codex >= 0.124.0.
+                                                         #   user or a Windows SYSTEM profile. Codex >= 0.124.0, and each
+                                                         #   user must approve the Codex hook (not for a Codex fleet).
                                                          #   Claude Code managed settings can hold the Claude hooks instead;
                                                          #   then run install-hooks --tool codex,cursor.
 # Hook key lookup (>= 1.0.0-beta.4): walk up from the workspace for .olakai/monitor-<tool>.json, then

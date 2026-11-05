@@ -143,7 +143,7 @@ olakai agents mine --source codex --json
 
 ## Bulk-provisioned machines (home layout, 1.0.0-beta.4+)
 
-An admin can push key files to `~/.olakai/monitor-<tool>.json` with an MDM tool and install the hooks with `olakai monitor install-hooks` (see `/olakai-monitor-local-coding-agent`, admin fleet rollout). These machines have no workspace `.olakai` folder. The hooks walk up from the workspace for `.olakai/monitor-<tool>.json`, then fall back to the home key file. A workspace config always wins.
+An admin can push key files to `~/.olakai/monitor-<tool>.json` with an MDM tool and install the hooks with `olakai monitor install-machine-hooks` as an administrator (see `/olakai-monitor-local-coding-agent`, admin fleet rollout). These machines have no workspace `.olakai` folder. The hooks walk up from the workspace for `.olakai/monitor-<tool>.json`, then fall back to the home key file. A workspace config always wins.
 
 When such a machine sends no events, check these in order, as the logged-on developer:
 
@@ -226,7 +226,7 @@ olakai monitor doctor --tool <tool>     # read the first failing check
 olakai monitor doctor --tool <tool> --fix   # auto-repair registry/hooks/key
 ```
 
-If `events-flowing` is the only failure: run one real turn and re-check. For Codex/Cursor, confirm you ran `init` **in this repo** (global-hook silent-exit otherwise).
+If `events-flowing` is the only failure: run one real turn and re-check. For Codex/Cursor, confirm you ran `init` **in this repo** (global-hook silent-exit otherwise). For Codex, a `hooks-approved` warning means Codex skips the hook until the user approves it at "Hooks need review" or in `/hooks`. For a fleet, an admin runs `olakai monitor install-machine-hooks` instead.
 
 ### "My monitored agent disappeared / doctor says 404"
 
