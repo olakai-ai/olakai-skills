@@ -18,7 +18,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.4"
+  version: "1.18.5"
 ---
 
 # Troubleshoot Olakai Agent Monitoring
@@ -778,6 +778,10 @@ Error: Unauthorized
 olakai logout
 olakai login
 ```
+
+`olakai login` signs in through the browser (device flow): open the link, sign in, check that the code matches, approve. If the code expired, run it again.
+
+If the user cannot sign in to the Olakai web app, or is an EMPLOYEE user, `olakai login` cannot work for them: EMPLOYEE users cannot get a CLI token. Do not look for another sign-in path. Send them to their Olakai admin, who invites them or sets up monitoring with bulk provisioning (`/olakai-monitor-local-coding-agent`).
 
 **2. Verify Authentication**
 ```bash

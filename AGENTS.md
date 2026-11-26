@@ -46,7 +46,7 @@ olakai-skills/
 ├── plugins/
 │   └── olakai/                   # Claude Code plugin directory
 │       ├── .claude-plugin/
-│       │   └── plugin.json       # Plugin metadata (version 1.21.2)
+│       │   └── plugin.json       # Plugin metadata (version 1.21.3)
 │       ├── README.md             # Plugin documentation
 │       ├── agents/
 │       │   └── olakai-expert.md  # Bundled agent combining all skills
@@ -516,7 +516,10 @@ These commands appear in SKILL.md files and must match `olakai-cli` implementati
 
 ```bash
 # Authentication
-olakai login
+olakai login            # Browser sign-in (device flow) only. Needs a user who can sign in to the web app
+                        #   (invited or SSO). EMPLOYEE users cannot get a CLI token: admins bulk-provision them.
+                        #   The CLI handshake / emailed 6-digit code was removed (OLA-2008); claimed email
+                        #   domains do not create accounts. Never document that flow.
 olakai logout
 olakai whoami
 
