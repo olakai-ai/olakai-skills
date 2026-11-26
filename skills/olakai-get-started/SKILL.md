@@ -16,7 +16,7 @@ description: >
 license: MIT
 metadata:
   author: olakai
-  version: "1.18.4"
+  version: "1.18.5"
 ---
 
 # Get Started with Olakai
@@ -63,6 +63,8 @@ olakai agents list --json 2>/dev/null | head -5 || echo "NO_AGENTS_OR_NOT_AUTH"
 ## Step 1: Create an Olakai Account
 
 If you don't have an Olakai account yet, create one directly from the terminal.
+
+> **Your company already uses Olakai?** Do not sign up. Ask your Olakai admin to invite you, or sign in with SSO, then go to [Step 3](#step-3-authenticate). A claimed email domain does not create an account for you.
 
 ### 1.1 Collect User Details
 
@@ -261,11 +263,13 @@ Connect the CLI to your Olakai account.
 
 ### 3.1 Login
 
+You need an Olakai user who can sign in to the Olakai web app: one you signed up for, one your admin invited, or one you reach through SSO. If you cannot sign in to the web app, stop here and ask your Olakai admin. **EMPLOYEE users cannot get a CLI token.** The admin sets them up with bulk provisioning (see `/olakai-monitor-local-coding-agent`), and the developer then runs no CLI command at all.
+
 ```bash
 olakai login
 ```
 
-This opens your browser for secure authentication. After logging in:
+This signs you in through your browser (device flow). The CLI shows a short code and a link. Open the link, sign in, check that the code matches, and approve. The code expires after a few minutes; run `olakai login` again for a new one. Olakai never emails a code to the CLI. After logging in:
 - The CLI stores your session locally
 - No API key needed for CLI operations
 - Session persists until you explicitly logout
@@ -536,6 +540,8 @@ olakai kpis create \
 | Problem | Solution |
 |---------|----------|
 | Browser doesn't open | Copy URL from terminal manually |
+| Cannot sign in to the Olakai web app, or you are an EMPLOYEE user | You cannot get a CLI token. Ask your Olakai admin to invite you, or to set up monitoring for you with bulk provisioning |
+| Sign-in code expired | Run `olakai login` again for a new code |
 | Login succeeds but CLI says not authenticated | Try `olakai logout` then `olakai login` again |
 | Corporate SSO issues | Contact your IT admin about OAuth access |
 

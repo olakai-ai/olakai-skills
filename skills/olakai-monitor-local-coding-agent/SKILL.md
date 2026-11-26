@@ -19,7 +19,7 @@ description: |
 license: MIT
 metadata:
   author: olakai
-  version: "1.21.3"
+  version: "1.21.4"
 ---
 
 # Monitor Local Coding Agents with Olakai
@@ -150,7 +150,7 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 | Result | Action |
 |--------|--------|
 | `CLI_NOT_INSTALLED` | Ask the user, then run `npm install -g olakai-cli@latest` and `olakai login` after they say yes. No Node.js 20+? Offer the standalone binary (beta) from `/olakai-get-started` |
-| `NOT_AUTHENTICATED` | Run `olakai login` |
+| `NOT_AUTHENTICATED` | Run `olakai login` (browser sign-in). It needs an Olakai user who can sign in to the web app. An EMPLOYEE user cannot get a CLI token: an admin sets that developer up with [bulk provisioning](#admin-zero-touch-fleet-rollout-bulk-provision) instead |
 | Shows email/account | Ready to proceed |
 
 > **Not set up at all?** Use `/olakai-get-started` first.

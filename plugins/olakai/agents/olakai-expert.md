@@ -131,7 +131,8 @@ olakai whoami 2>/dev/null || echo "NOT_AUTHENTICATED"
 
 **If either check fails:**
 1. Ask the user: "Do you have an Olakai account?"
-2. If NO account: Guide them to https://app.olakai.ai/signup?flow=developer&source=claude-code (after email verification, they auto-receive an SDK API key)
+2. If NO account: if their company already uses Olakai, they ask their Olakai admin for an invite (or sign in with SSO). Otherwise guide them to https://app.olakai.ai/signup?flow=developer&source=claude-code (after email verification, they auto-receive an SDK API key)
+   - `olakai login` is a browser sign-in (device flow) and needs a user who can sign in to the web app. EMPLOYEE users cannot get a CLI token; an admin sets them up with bulk provisioning
 3. Invoke `/olakai-get-started` skill to walk through setup
 4. Only proceed with other skills after prerequisites are met
 
